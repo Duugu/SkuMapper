@@ -1,0 +1,51 @@
+<Bindings>
+   <Binding name="Open Sku Minimap" header="SKUMAPPERKEYBINDHEADER">
+      SkuOptions.db.profile["SkuNav"].showSkuMM = SkuOptions.db.profile["SkuNav"].showSkuMM == false
+      SkuNav:SkuNavMMOpen()
+   </Binding>
+   <Binding name="Show Routes On Game Minimap">
+      SkuOptions.db.profile["SkuNav"].showRoutesOnMinimap = SkuOptions.db.profile["SkuNav"].showRoutesOnMinimap ~= true
+   </Binding>
+   <Binding name="Toggle Game Minimap Size">
+      SkuNav.MinimapFull = SkuNav.MinimapFull == false
+      if SkuNav.MinimapFull == true then
+         MinimapCluster:SetScale(3.5)
+      else
+         MinimapCluster:SetScale(1)
+      end   
+   </Binding>
+   <Binding name="Add Normal Waypoint">
+      if SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true then
+         local tWpSize = 1
+      
+         local tNewWpName = SkuNav:CreateWaypoint(nil, nil, nil, tWpSize)
+         
+         if SkuOptions.db.profile["SkuNav"].routeRecording == true and 
+            SkuOptions.db.profile["SkuNav"].routeRecordingLastWp and
+            SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true
+         then
+            SkuNav:CreateWpLink(tNewWpName, SkuOptions.db.profile["SkuNav"].routeRecordingLastWp)
+            SkuOptions.db.profile["SkuNav"].routeRecordingLastWp = tNewWpName
+            print("WP created (normal)")
+         end
+      end
+
+   </Binding>
+   <Binding name="Add Large Waypoint">
+      if SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true then
+         local tWpSize = 5
+      
+         local tNewWpName = SkuNav:CreateWaypoint(nil, nil, nil, tWpSize)
+         
+         if SkuOptions.db.profile["SkuNav"].routeRecording == true and 
+            SkuOptions.db.profile["SkuNav"].routeRecordingLastWp and
+            SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true
+         then
+            SkuNav:CreateWpLink(tNewWpName, SkuOptions.db.profile["SkuNav"].routeRecordingLastWp)
+            SkuOptions.db.profile["SkuNav"].routeRecordingLastWp = tNewWpName
+            print("WP created (large)")
+         end
+      end
+
+   </Binding>
+</Bindings>
