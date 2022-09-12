@@ -1047,6 +1047,7 @@ function SkuNav:SkuNavMMOpen()
 			_G["SkuNavMMMainFrameZoneSelect"].selectedDefault = false
 
 			--level dd
+			--[[
 			local tDropdownFrame = CreateButtonFrameTemplate("SkuNavMMMainFrameLevelSelect", tOptionsParent, "Level", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 0, -20)
 			tDropdownFrame.MenuButtonsObjects = {}
 			tDropdownFrame.value = -100
@@ -1163,7 +1164,7 @@ function SkuNav:SkuNavMMOpen()
 				end
 			end)
 			_G["SkuNavMMMainFrameLevelSelect"].selectedDefault = false
-
+			]]
 			--init
 			_G["SkuNavMMMainFrameShowFilter"].selected = _G["SkuNavMMMainFrameShowFilter"].selectedDefault
 			_G["SkuNavMMMainFrameShowQuestStartWps"].selected = _G["SkuNavMMMainFrameShowQuestStartWps"].selectedDefault

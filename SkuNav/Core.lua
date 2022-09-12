@@ -1,46 +1,37 @@
 --[[
-todo:
-	- buttons für
-		phase
-		fly?
-
-	- lk ressourcen filtern
-	- okay button bei texteingabe geht nicht
-	- zone dd für nordend testen
-	- mapper in inis testen
-	- übersetzen
 ------------------------------------------------
-Slash:
-	follow
-	reset
-	export
-	import
-	version
-	mmreset
+Sku Discord
+	https://discord.gg/FsfKeqxZV4
 
 ------------------------------------------------
-Buttons:
-				CTRL							CTRL + SHIFT		CTRL + ALT
-Left			Start/end link				Create WP			Add comment to WP
-Right			Start/end link del		Delete WP			Delete all comments from WP
-Middle		Rename wp
-Mouse5		Add polygon point
-Mouse4		(hold) Move WP
+Key bindings (no default bindings, set them via Game Settings > Interface > Key bindings > Other)
+	Open Sku minimap
+	Add normal waypoint
+	Add large waypoint
+	Show map data on game minimap"
+   Toggle game minimap size">
 
+------------------------------------------------
+Mouse buttons
+	CTRL + LEFT MOUSE				Start/end creating a new link
+	CTRL + SHIFT + LEFT MOUSE	Create a new waypoint
+	CTRL + ALT + LEFT MOUSE		Add a new comment to an existing waypoint
 
+	CTRL + RIGHT MOUSE			Start/end deleting an existing link
+	CTRL + SHIFT + RIGHT MOUSE	Delete an existing custom waypoint
+	CTRL + ALT + RIGHT MOUSE	Delete all comments from an existing waypoint
 
-Start/end create link: CTRL + LEFT MOUSE
-Create waypoint: CTRL + SHIFT + LEFT MOUSE
-Add comment to WP: CTRL + ALT + LEFT MOUSE
+	CTRL + MIDDLE MOUSE			Rename an existing waypoint
+	CTRL + MOUSE 4					Hold and drag to move an existing waypoint
 
-Start/end delete link: CTRL + RIGHT MOUSE
-Delete waypoint: CTRL + SHIFT + RIGHT MOUSE
-Delete all comments from waypoint: CTRL + ALT + RIGHT MOUSE
-
-Rename waypoint: CTRL + MIDDLE MOUSE
-Add zone poly point: CTRL + MOUSE 5
-Move waypoint: CTRL + MOUSE 4
-
+------------------------------------------------
+Slash commands
+	/sku follow		set the sku minimap to follow
+	/sku reset		reset all map data to the the default data (caution: all your work will be lost)
+	/sku export		output the map data for the text file
+	/sku import		import a text file with map data
+	/sku version	output the addon version
+	/sku mmreset	reset the size and position of the sku minimap
 
 ]]
 

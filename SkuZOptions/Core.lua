@@ -273,7 +273,8 @@ function SkuOptions:EditBoxShow(aText, aOkScript)
 		end)
 
 		SkuOptionsEditBoxEditBox:HookScript("OnEnterPressed", function(...) SkuOptionsEditBoxOkScript(...) SkuOptionsEditBox:Hide() end)
-		SkuOptionsEditBoxButton:HookScript("OnClick", SkuOptionsEditBoxOkScript)
+		--SkuOptionsEditBoxButton:HookScript("OnClick", SkuOptionsEditBoxOkScript)
+		_G["SkuOptionsEditBoxButton"]:HookScript("OnClick", function() SkuOptionsEditBoxOkScript() end)
 
 		f:Show()
 	end

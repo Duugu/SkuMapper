@@ -1,9 +1,9 @@
 ## Interface: 30400
 ## Interface-Wrath: 30400
-## Title: SkuMapper (0.1)
+## Title: SkuMapper (0.2)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
-## Version: 0.1
+## Version: 0.2
 
 Bindings.xml
 embeds.xml
