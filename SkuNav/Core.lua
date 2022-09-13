@@ -1285,7 +1285,7 @@ function SkuNav:OnMouseRightUp()
 		end
 	else
 		--Start/end link delete
-		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true then
+		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true and SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete ~= true then
 			print("not possible. link recording in progress.")
 		else
 			local tWpName = SkuWaypointWidgetCurrent
