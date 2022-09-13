@@ -1,40 +1,3 @@
---[[
-------------------------------------------------
-Sku Discord
-	https://discord.gg/FsfKeqxZV4
-
-------------------------------------------------
-Key bindings (no default bindings, set them via Game Settings > Interface > Key bindings > Other)
-	Open Sku minimap
-	Add normal waypoint
-	Add large waypoint
-	Show map data on game minimap"
-   Toggle game minimap size">
-
-------------------------------------------------
-Mouse buttons
-	CTRL + LEFT MOUSE				Start/end creating a new link
-	CTRL + SHIFT + LEFT MOUSE	Create a new waypoint
-	CTRL + ALT + LEFT MOUSE		Add a new comment to an existing waypoint
-
-	CTRL + RIGHT MOUSE			Start/end deleting an existing link
-	CTRL + SHIFT + RIGHT MOUSE	Delete an existing custom waypoint
-	CTRL + ALT + RIGHT MOUSE	Delete all comments from an existing waypoint
-
-	CTRL + MIDDLE MOUSE			Rename an existing waypoint
-	CTRL + MOUSE 4					Hold and drag to move an existing waypoint
-
-------------------------------------------------
-Slash commands
-	/sku follow		set the sku minimap to follow
-	/sku reset		reset all map data to the the default data (caution: all your work will be lost)
-	/sku export		output the map data for the text file
-	/sku import		import a text file with map data
-	/sku version	output the addon version
-	/sku mmreset	reset the size and position of the sku minimap
-
-]]
-
 ---------------------------------------------------------------------------------------------------------------------------------------
 local MODULE_NAME = "SkuNav"
 local _G = _G
@@ -269,7 +232,7 @@ function SkuNav:CreateWaypointCache(aAddLocalizedNames)
 								end
 							end
 						else
-							dprint("tried caching deleted custom wp", tIndex, tData)
+							--print("error: tried caching deleted custom wp", tIndex, tData)
 						end
 					end
 				end
@@ -285,12 +248,12 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:LoadLinkDataFromProfile()
-	print("LoadLinkDataFromProfile")
+	--print("LoadLinkDataFromProfile")
 	if SkuOptions.db.global[MODULE_NAME].Links then
 		SkuNav:CheckAndUpdateProfileLinkData()
 		for tSourceWpID, tSourceWpLinks in pairs(SkuOptions.db.global[MODULE_NAME].Links) do
 			if not WaypointCacheLookupIdForCacheIndex[tSourceWpID] then
-				dprint("fail NO WaypointCacheLookupIdForCacheIndex[tSourceWpID]", tSourceWpID, tSourceWpLinks)
+				print("Error: This should not happen. NO WaypointCacheLookupIdForCacheIndex[tSourceWpID]", tSourceWpID, tSourceWpLinks)
 			end
 			local tSourceWpName = WaypointCache[WaypointCacheLookupIdForCacheIndex[tSourceWpID]].name
 			WaypointCacheLookupCacheNameForId[tSourceWpName] = tSourceWpID
@@ -314,14 +277,13 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:CheckAndUpdateProfileLinkData()
-	print("CheckAndUpdateProfileLinkData")
 	local tDeletedCounter = 0
 
 	if SkuOptions.db.global[MODULE_NAME].Links then
 		for tSourceWpID, tSourceWpLinks in pairs(SkuOptions.db.global[MODULE_NAME].Links) do
 			if not WaypointCacheLookupIdForCacheIndex[tSourceWpID] then
 				local typeId, dbIndex, spawn, areaId = SkuNav:GetWpDataFromId(tSourceWpID)
-				dprint("UPDATED source deleted, not in db", tSourceWpID, typeId, dbIndex, spawn, areaId)
+				--print("UPDATED source deleted, not in db", tSourceWpID, typeId, dbIndex, spawn, areaId)
 				SkuOptions.db.global[MODULE_NAME].Links[tSourceWpID] = nil
 				tDeletedCounter = tDeletedCounter + 1
 			else
@@ -329,25 +291,25 @@ function SkuNav:CheckAndUpdateProfileLinkData()
 				if SkuNav:GetWaypointData2(tSourceWpName) then
 					for tTargetWpID, tTargetWpDistance in pairs(tSourceWpLinks) do
 						if not WaypointCacheLookupIdForCacheIndex[tTargetWpID] then
-							dprint("UPDATED Target deleted, not in db", tSourceWpID, tSourceWpLinks, tSourceWpName, "-", tTargetWpID, tTargetWpDistance, WaypointCacheLookupIdForCacheIndex[tTargetWpID])
+							--print("UPDATED Target deleted, not in db", tSourceWpID, tSourceWpLinks, tSourceWpName, "-", tTargetWpID, tTargetWpDistance, WaypointCacheLookupIdForCacheIndex[tTargetWpID])
 							SkuOptions.db.global[MODULE_NAME].Links[tSourceWpID][tTargetWpID] = nil
 							tDeletedCounter = tDeletedCounter + 1
 						else
 							local tTargetWpName = WaypointCache[WaypointCacheLookupIdForCacheIndex[tTargetWpID]].name					
 							if tSourceWpName == tTargetWpName then
 								SkuOptions.db.global[MODULE_NAME].Links[tSourceWpID][tTargetWpID] = nil
-								print("+++UPDATED deleted", tTargetWpName, "from", tSourceWpName, "because source was linked with self")
+								--print("+++UPDATED deleted", tTargetWpName, "from", tSourceWpName, "because source was linked with self")
 							else
 								if SkuNav:GetWaypointData2(tTargetWpName) then
 									SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID] = SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID] or {}
 									if not SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID][tSourceWpID] then
-										print("+++UPDATED added", tSourceWpName, "to", tTargetWpName)
+										--print("+++UPDATED added", tSourceWpName, "to", tTargetWpName)
 										SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID][tSourceWpID] = tTargetWpDistance
 									end
 								else
-									print("+++UPDATED deleted", tTargetWpName, "from", tSourceWpName, "because target does not exist")
+									--print("+++UPDATED deleted", tTargetWpName, "from", tSourceWpName, "because target does not exist")
 									SkuOptions.db.global[MODULE_NAME].Links[tSourceWpID][tTargetWpID] = nil
-									print("  +++UPDATED deleted", tTargetWpName, "because target does not exist")
+									--print("  +++UPDATED deleted", tTargetWpName, "because target does not exist")
 									SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID] = nil
 								end
 							end
@@ -358,23 +320,25 @@ function SkuNav:CheckAndUpdateProfileLinkData()
 						local tTargetWpName = WaypointCache[WaypointCacheLookupIdForCacheIndex[tTargetWpID]].name										
 						SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID] = SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID] or {}
 						if not SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID][tSourceWpID] then
-							print("+++UPDATED deleted", tSourceWpName, "from", tTargetWpName, "because source does not exist")
+							--print("+++UPDATED deleted", tSourceWpName, "from", tTargetWpName, "because source does not exist")
 							SkuOptions.db.global[MODULE_NAME].Links[tTargetWpID][tSourceWpID] = nil
 						end
 					end
-					print("  +++UPDATED delted", tSourceWpName, "because source does not exist")
+					--print("  +++UPDATED delted", tSourceWpName, "because source does not exist")
 					SkuOptions.db.global[MODULE_NAME].Links[tSourceWpID] = nil
 				end
 			end
 		end
 	end
 
-	print("tDeletedCounter", tDeletedCounter)
+	if tDeletedCounter and tDeletedCounter > 0 then
+		print("Error: deletedCounter > 0; this should not happen", tDeletedCounter)
+	end
 end
 
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:SaveLinkDataToProfile(aWpName)
-	print("SaveLinkDataToProfile", aWpName)
+	--print("SaveLinkDataToProfile", aWpName)
 	if aWpName then
 		SkuOptions.db.global[MODULE_NAME].Links[WaypointCacheLookupCacheNameForId[aWpName]] = {}
 		for twname, twdist in pairs(WaypointCache[WaypointCacheLookupAll[aWpName]].links.byName) do
@@ -458,7 +422,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:DeleteWpLink(aWpAName, aWpBName)
-	print("DeleteWpLink", aWpAName, aWpBName)
+	--print("DeleteWpLink", aWpAName, aWpBName)
 	local tWpAIndex = WaypointCacheLookupAll[aWpAName]
 	local tWpBIndex = WaypointCacheLookupAll[aWpBName]
 	local tWpAData = SkuNav:GetWaypointData2(nil, tWpAIndex)
@@ -495,7 +459,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:CreateWpLink(aWpAName, aWpBName)
-	print("CreateWpLink", aWpAName, aWpBName)
+	--print("CreateWpLink", aWpAName, aWpBName)
 	if aWpAName ~= aWpBName then
 		local tWpAIndex = WaypointCacheLookupAll[aWpAName]
 		local tWpBIndex = WaypointCacheLookupAll[aWpBName]
@@ -810,15 +774,15 @@ function SkuNav:StartRouteRecording(aWPAName, aDeleteFlag)
 	SkuOptions.tmpNpcWayPointNameBuilder_Coords = ""
 
 	if not aDeleteFlag then
-		print(L["recording;starts"], false, true, 0.3, true)
+		print("Recording start")
 	else
-		print(L["Löschen beginnt"], false, true, 0.3, true)
+		print("Deleting start")
 	end
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:EndRouteRecording(aWpName, aDeleteFlag)
-	print("EndRouteRecording", aWpName, aDeleteFlag) 
+	--print("EndRouteRecording", aWpName, aDeleteFlag) 
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == false or 
 		not SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp or 
 		SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp == "" 
@@ -1218,6 +1182,7 @@ function SkuNav:OnMouseLeftUp()
 	if IsShiftKeyDown() then
 		--Create WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+			print("not possible. link deleting in progress.")
 			return
 		end
 		local tWy, tWx = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
@@ -1231,36 +1196,43 @@ function SkuNav:OnMouseLeftUp()
 			SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp = tNewWpName
 		end
 		SkuOptions.db.global["SkuNav"].hasCustomMapData = true
-		print(L["WP created"], false, true, 0.3, true)
+		print("Waypoint created")
 
 	elseif IsAltKeyDown() then
 		--Add comment to WP
-		if SkuWaypointWidgetCurrent then
-			SkuOptions:AddCommentToWp(SkuWaypointWidgetCurrent)
+		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+			print("not possible. link recording or deleting in progress.")
+		else
+			if SkuWaypointWidgetCurrent then
+				SkuOptions:AddCommentToWp(SkuWaypointWidgetCurrent)
+			end
 		end
 	else
 		--Start/end link add
-		local tWpName = SkuWaypointWidgetCurrent
-		if not tWpName then
-			return
-		end
-	
-		local wpObj = SkuNav:GetWaypointData2(tWpName)
-		if not wpObj then
-			return
-		end
-	
-		if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
-			print("Start:", tWpName)
-			SkuNav:StartRouteRecording(tWpName)
+		if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+			print("not possible. link deleting in progress.")
 		else
-			if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete ~= true then
-				print("End:", tWpName)
-				SkuNav:EndRouteRecording(tWpName)
+			local tWpName = SkuWaypointWidgetCurrent
+			if not tWpName then
+				return
 			end
+		
+			local wpObj = SkuNav:GetWaypointData2(tWpName)
+			if not wpObj then
+				return
+			end
+		
+			if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
+				print("Start:", tWpName)
+				SkuNav:StartRouteRecording(tWpName)
+			else
+				if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete ~= true then
+					print("End:", tWpName)
+					SkuNav:EndRouteRecording(tWpName)
+				end
+			end
+			SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 		end
-		SkuOptions.db.global["SkuNav"].hasCustomMapData = true
-
 	end
 end
 
@@ -1278,65 +1250,81 @@ end
 function SkuNav:OnMouseRightUp()
 	if IsAltKeyDown() then
 		--Delete comments from WP
-		if not SkuWaypointWidgetCurrent then
-			return
+		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+			print("not possible. link recording or deleting in progress.")
+		else
+
+			if not SkuWaypointWidgetCurrent then
+				return
+			end
+			local wpObj = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
+			if not wpObj then
+				return
+			end
+			SkuNav:SetWaypoint(SkuWaypointWidgetCurrent, {comments = 
+				{
+					["deDE"] = {},
+					["enUS"] = {},
+				}
+			})
+			SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 		end
-		local wpObj = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
-		if not wpObj then
-			return
-		end
-		SkuNav:SetWaypoint(SkuWaypointWidgetCurrent, {comments = 
-			{
-				["deDE"] = {},
-				["enUS"] = {},
-			}
-		})
-		SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 
 	elseif IsShiftKeyDown() then
 		--Delete WP
-		if SkuWaypointWidgetCurrent then
-			local wpObj = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
-			if wpObj then
-				SkuNav:DeleteWaypoint(SkuWaypointWidgetCurrent)
-				SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+			print("not possible. link recording or deleting in progress.")
+		else
+			if SkuWaypointWidgetCurrent then
+				local wpObj = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
+				if wpObj then
+					SkuNav:DeleteWaypoint(SkuWaypointWidgetCurrent)
+					SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+				end
 			end
 		end
-
 	else
 		--Start/end link delete
-		local tWpName = SkuWaypointWidgetCurrent
-		if not tWpName then
-			return
-		end
-	
-		local wpObj = SkuNav:GetWaypointData2(tWpName)
-		if not wpObj then
-			return
-		end
-	
-		if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
-			print("Start:", tWpName)
-			SkuNav:StartRouteRecording(tWpName, true)
+		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true then
+			print("not possible. link recording in progress.")
 		else
-			if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
-				print("End:", tWpName)	
-				SkuNav:EndRouteRecording(tWpName, true)
+			local tWpName = SkuWaypointWidgetCurrent
+			if not tWpName then
+				return
 			end
+		
+			local wpObj = SkuNav:GetWaypointData2(tWpName)
+			if not wpObj then
+				return
+			end
+		
+			if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
+				print("Start:", tWpName)
+				SkuNav:StartRouteRecording(tWpName, true)
+			else
+				if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+					print("End:", tWpName)	
+					SkuNav:EndRouteRecording(tWpName, true)
+				end
+			end
+			SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 		end
-		SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 	end
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse4Down()
 	--start Move WP
-	local tWpName = SkuWaypointWidgetCurrent
-	if tWpName then
-		local wpObj = SkuNav:GetWaypointData2(tWpName)
-		if wpObj then
-			tCurrentDragWpName = tWpName
-			SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+		print("not possible. link recording or deleting in progress.")
+	else
+		local tWpName = SkuWaypointWidgetCurrent
+		if tWpName then
+			local wpObj = SkuNav:GetWaypointData2(tWpName)
+			if wpObj then
+				tCurrentDragWpName = tWpName
+				SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+			end
 		end
 	end
 end
@@ -1344,16 +1332,19 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse4Hold()
 	--Hold Move WP
-	if tCurrentDragWpName then
-		local tWpData = SkuNav:GetWaypointData2(tCurrentDragWpName)
-		if tWpData then
-			local tDragY, tDragX = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
-			if tDragX and tDragY then
-				SkuNav:SetWaypoint(tCurrentDragWpName, {
-					worldX = tDragX,
-					worldY = tDragY,
-				})
-				SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+	else
+		if tCurrentDragWpName then
+			local tWpData = SkuNav:GetWaypointData2(tCurrentDragWpName)
+			if tWpData then
+				local tDragY, tDragX = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
+				if tDragX and tDragY then
+					SkuNav:SetWaypoint(tCurrentDragWpName, {
+						worldX = tDragX,
+						worldY = tDragY,
+					})
+					SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+				end
 			end
 		end
 	end
@@ -1362,24 +1353,28 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse4Up()
 	--End Move WP
-	if tCurrentDragWpName then
-		local tWpData = SkuNav:GetWaypointData2(tCurrentDragWpName)
-		if tWpData then
-			local tDragY, tDragX = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
-			if tDragX and tDragY then
-				SkuNav:SetWaypoint(tCurrentDragWpName, {
-					worldX = tDragX,
-					worldY = tDragY,
-				})
-				SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+		print("not possible. link recording or deleting in progress.")
+	else
+		if tCurrentDragWpName then
+			local tWpData = SkuNav:GetWaypointData2(tCurrentDragWpName)
+			if tWpData then
+				local tDragY, tDragX = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
+				if tDragX and tDragY then
+					SkuNav:SetWaypoint(tCurrentDragWpName, {
+						worldX = tDragX,
+						worldY = tDragY,
+					})
+					SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+				end
 			end
 		end
+		_G["SkuNavWpDragClickTrap"]:Hide()
+		SkuWaypointWidgetCurrent = nil
+		SkuWaypointWidgetCurrentMMX = nil
+		SkuWaypointWidgetCurrentMMY = nil
+		tCurrentDragWpName = nil
 	end
-	_G["SkuNavWpDragClickTrap"]:Hide()
-	SkuWaypointWidgetCurrent = nil
-	SkuWaypointWidgetCurrentMMX = nil
-	SkuWaypointWidgetCurrentMMY = nil
-	tCurrentDragWpName = nil
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1395,24 +1390,28 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouseMiddleUp()
 	--Rename WP
-	if SkuWaypointWidgetCurrent then
-		local tOldName = SkuWaypointWidgetCurrent
-		local tWpData = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
-		if tWpData then
-			if tWpData.typeId ~= 1 then
-				print("only custom wp can be renamed")
-				return
-			end
-			SkuOptions:EditBoxShow("test", function(a, b, c) 
-				local tText = SkuOptionsEditBoxEditBox:GetText() 
-				if tText ~= "" then
-					SkuOptions:RenameWp(tOldName, tText)
-					print("renamed")
-				else
-					print("name empty")
+	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
+		print("not possible. link recording or deleting in progress.")
+	else
+		if SkuWaypointWidgetCurrent then
+			local tOldName = SkuWaypointWidgetCurrent
+			local tWpData = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
+			if tWpData then
+				if tWpData.typeId ~= 1 then
+					print("only custom waypoints can be renamed")
+					return
 				end
-			end)
-			print("enter new name and press enter or press escape to cancel")
+				SkuOptions:EditBoxShow("test", function(a, b, c) 
+					local tText = SkuOptionsEditBoxEditBox:GetText() 
+					if tText ~= "" then
+						SkuOptions:RenameWp(tOldName, tText)
+						print("renamed")
+					else
+						print("name empty")
+					end
+				end)
+				print("enter new name and press enter or press escape to cancel")
+			end
 		end
 	end
 end
@@ -1550,7 +1549,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint)
-	dprint("CreateWaypoint", aName, aX, aY, aSize, aForcename, aIsTempWaypoint)
+	--dprint("CreateWaypoint", aName, aX, aY, aSize, aForcename, aIsTempWaypoint)
 	aSize = aSize or 1
 	local tPName = UnitName("player")
 
@@ -1611,7 +1610,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
-	print("SetWaypoint", aName, aData)
+	--print("SetWaypoint", aName, aData)
 
 	local tWpIndex
 	local tIsNew
@@ -1772,7 +1771,7 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
-	print("DeleteWaypoint", aWpName, aIsTempWaypoint)
+	--print("DeleteWaypoint", aWpName, aIsTempWaypoint)
 	local tWpData = SkuNav:GetWaypointData2(aWpName)
 	local tWpId = WaypointCacheLookupCacheNameForId[aWpName]
 	
@@ -1781,14 +1780,14 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
 	end
 
 	if tWpData.typeId ~= 1 then
-		print(L["Only custom waypoints can be deleted"])
+		print("Only custom waypoints can be deleted")
 		return false
 	end
 
 
 	local tCacheIndex = WaypointCacheLookupAll[aWpName] 
 	if not SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] then
-		dprint("ERROR waypoint nil in db")
+		print("Error: waypoint nil in db")
 	else
 		--remove from links db
 

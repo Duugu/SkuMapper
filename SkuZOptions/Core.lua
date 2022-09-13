@@ -84,7 +84,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:OnProfileChanged()
-	print("OnProfileChanged")
+	--print("OnProfileChanged")
 
 	SkuNav:PLAYER_ENTERING_WORLD()
 	
@@ -101,7 +101,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:OnProfileCopied()
-	print("OnProfileCopied")
+	--print("OnProfileCopied")
 	SkuNav:PLAYER_ENTERING_WORLD()
 	
 	if SkuNav then
@@ -117,7 +117,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:OnProfileReset()
-	print("OnProfileReset")
+	--print("OnProfileReset")
 	SkuOptions:ResetWpAndLinkData()
 
 	if SkuNav then
@@ -437,9 +437,9 @@ function SkuOptions:ImportWpAndLinkData()
 
 			--done
 			print("Version:", tVersion)
-			print(L["Links importiert:"], tImportCounterLinks)
-			print(L["Wegpunkte importiert:"], tImportCounterWps)
-			print(L["Wegpunkte ignoriert:"], tIgnoredCounterWps)
+			print("Links imported:", tImportCounterLinks)
+			print("Waypoints imported:", tImportCounterWps)
+			print("Waypoints ignored:", tIgnoredCounterWps)
 
 			SkuNav:CreateWaypointCache()
 
@@ -476,12 +476,12 @@ function SkuOptions:ExportWpAndLinkData()
 	for _, _ in pairs(tExportDataTable.links) do
 		tCount = tCount + 1
 	end
-	print(L["Links exportiert:"], tCount)
+	print("Links exported:", tCount)
 	tCount = 0
 	for _, _ in pairs(tExportDataTable.waypoints) do
 		tCount = tCount + 1
 	end
-	print(L["Wegpunkte exportiert:"], tCount)
+	print("Waypoints exported", tCount)
 
 	
 	SkuOptions:EditBoxShow(SkuOptions:Serialize(tExportDataTable.version, tExportDataTable.links, tExportDataTable.waypoints), function(self) PlaySound(89) end)
@@ -505,7 +505,7 @@ function SkuOptions:AddCommentToWp(aName)
 			print("comments can only be assigned to custom waypoints")
 			return
 		end
-		SkuOptions:EditBoxShow("test", function(a, b, c) 
+		SkuOptions:EditBoxShow("", function(a, b, c) 
 			local tText = SkuOptionsEditBoxEditBox:GetText() 
 			if tText ~= "" then
 				if not tWpData.comments or not tWpData.comments[Sku.Loc] then
@@ -523,19 +523,19 @@ function SkuOptions:AddCommentToWp(aName)
 
 				SkuNav:SetWaypoint(aName, tWpData)
 				SkuOptions.db.global["SkuNav"].hasCustomMapData = true
-				print(L["Kommentar zugewiesen"], tText)
+				print("Comment added", tText)
 			else
-				print(L["Kommentar leer"])
+				print("Comment empty")
 			end
 		end)
-		print(L["Jetzt kommentar eingeben und mit ENTER abschließen oder mit ESC abbrechen"])
+		print("Enter comment text and press ENTER to add or ESCAPE to cancel")
 	end
 
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:RenameWp(aOldName, aNewName)
-	print("rename", aOldName, aNewName)
+	--print("rename", aOldName, aNewName)
 	local tWpData = SkuNav:GetWaypointData2(aOldName)
 
 	if tWpData.typeId ~= 1 then
@@ -700,7 +700,6 @@ function SkuOptions:ImportTranslated()
 		}
 
 		for iloc, vloc in pairs(tLocs) do
-			print("---- ", iloc)
 			for i, v in pairs(_G[iloc]) do
 				local tFound
 				for id, vd in pairs(v) do

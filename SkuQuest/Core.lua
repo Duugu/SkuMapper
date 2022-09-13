@@ -23,8 +23,6 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuQuest:PLAYER_LOGIN(...)
-	--print("SkuQuest:PLAYER_LOGIN")
-
 	--apply fixed on tbc dbs
 	SkuDB:FixQuestDB(SkuDB)
 	SkuDB:FixItemDB(SkuDB)
@@ -64,7 +62,6 @@ function SkuQuest:PLAYER_LOGIN(...)
 	end
 
 	SkuDB.NpcData.Names = SkuDB.WotLK.NpcData.Names
-	--print("NpcData", tcount)
 
 	--merge items dbs
 	local tcount = 0
@@ -75,7 +72,6 @@ function SkuQuest:PLAYER_LOGIN(...)
 		end
 	end	
 	SkuDB.itemLookup = SkuDB.WotLK.itemLookup
-	--print("itemDataTBC", tcount)
 
 	--merge object dbs
 	local tcount = 0
@@ -117,7 +113,6 @@ function SkuQuest:PLAYER_LOGIN(...)
 	end
 
 	--SkuDB.objectLookup = SkuDB.WotLK.objectLookup
-	--print("objectDataTBC", tcount)
 	
 	--merge quest dbs
 	local tcount = 0
@@ -128,7 +123,6 @@ function SkuQuest:PLAYER_LOGIN(...)
 		end
 	end
 	SkuDB.questLookup = SkuDB.WotLK.questLookup
-	--print("questDataTBC", tcount)
 
 	-- do final stuff
 	SkuQuest:BuildQuestZoneCache()
@@ -144,8 +138,6 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 SkuQuest.QuestWpCache = {}
 function SkuQuest:GetAllQuestWps(aQuestID, aStart, aObjective, aFinish, aOnly3)
-	--dprint("GetAllQuestWps", aQuestID, aStart, aObjective, aFinish, aOnly3)
-
 	if aStart == true then
 		if SkuDB.questDataTBC[aQuestID][SkuDB.questKeys["startedBy"]][1] 
 			or SkuDB.questDataTBC[aQuestID][SkuDB.questKeys["startedBy"]][2]
@@ -252,7 +244,6 @@ function SkuQuest:BuildQuestZoneCache()
 			if tstartedBy[3] then
 				--itemStart
 				for i, v in pairs(tstartedBy[3]) do
-					--dprint("  itemStart", i, v)
 					if SkuDB.itemDataTBC[v][SkuDB.itemKeys['npcDrops']] then
 						for z = 1, #SkuDB.itemDataTBC[v][SkuDB.itemKeys['npcDrops']] do
 							GetCreatureArea(aQuestID, SkuDB.itemDataTBC[v][SkuDB.itemKeys['npcDrops']][z])
@@ -298,7 +289,6 @@ function SkuQuest:BuildQuestZoneCache()
 				end
 				--['itemObjective'] = 3, -- table {{item(int), text(string)},...}
 				if objectives[3] then
-					--dprint("  objectives itemObjective")
 					for i, v in pairs(objectives[3]) do
 						local tItemId = v[1]
 						if SkuDB.itemDataTBC[tItemId][SkuDB.itemKeys['npcDrops']] then
@@ -363,13 +353,13 @@ function SkuQuest:UpdateAllQuestObjects()
 					local description, objectiveType, isCompleted = GetQuestLogLeaderBoard(y, x)
 					if isCompleted == false then
 						if objectiveType == "object" then
-							dprint(x, y, description)
+							--print(x, y, description)
 						elseif objectiveType == "item" then
 							for i, v in pairs(SkuDB.itemLookup[Sku.L["locale"]]) do
 								if string.find(description, v) then
 									if SkuDB.itemDataTBC[i] and SkuDB.itemDataTBC[i][SkuDB.itemKeys.objectDrops] then
 										for _, tObjectId in pairs(SkuDB.itemDataTBC[i][SkuDB.itemKeys.objectDrops]) do
-											dprint(v, tObjectId, SkuDB.objectLookup[Sku.L["locale"]][tObjectId])
+											--print(v, tObjectId, SkuDB.objectLookup[Sku.L["locale"]][tObjectId])
 											if SkuDB.objectLookup[Sku.L["locale"]][tObjectId] then
 												SkuQuest.questObjects[SkuDB.objectLookup[Sku.L["locale"]][tObjectId]] = tObjectId
 											end
