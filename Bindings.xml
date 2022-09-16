@@ -6,6 +6,7 @@
    <Binding name="Add Normal Waypoint">
 		if SkuOptions.db.profile["SkuNav"].routeRecordingDelete == true then
 			print("not possible. link deleting in progress.")
+         SkuNav:PlayFailSound()
 			return
 		end
       local tWpSize = 1
@@ -25,6 +26,7 @@
    <Binding name="Add Large Waypoint">
 		if SkuOptions.db.profile["SkuNav"].routeRecordingDelete == true then
 			print("not possible. link deleting in progress.")
+         SkuNav:PlayFailSound()
 			return
 		end
          local tWpSize = 5
@@ -44,6 +46,10 @@
    <Binding name="Rename an existing waypoint">
       SkuNav:OnMouseMiddleUp()
    </Binding>
+   <Binding name="Cancel current recording/deleting">
+      SkuNav:OnCancelRecording()
+   </Binding>
+
    <Binding name="Show Routes On Game Minimap">
       SkuOptions.db.profile["SkuNav"].showRoutesOnMinimap = SkuOptions.db.profile["SkuNav"].showRoutesOnMinimap ~= true
    </Binding>

@@ -1,7 +1,7 @@
 SkuMapper Addon
 
 This addon is used to build and edit map data for the Sku addon.
-For more information joind the Sku Discord server: https://discord.gg/FsfKeqxZV4
+For more information join the Sku Discord server: https://discord.gg/FsfKeqxZV4
 
 ------------------------------------------------
 Key bindings (no default bindings, set them up via Game Settings > Interface > Key bindings > Other)
@@ -9,6 +9,7 @@ Key bindings (no default bindings, set them up via Game Settings > Interface > K
 	Add normal waypoint
 	Add large waypoint
    Rename an existing waypoint
+	Cancel current recording/deleting	
 	Show map data on default game minimap
    Toggle default game minimap size
 
@@ -33,3 +34,10 @@ Slash commands
 	/sku import		import a text file with map data
 	/sku version	output the addon version
 	/sku mmreset	reset the size and position of the sku minimap
+
+------------------------------------------------
+Release notes
+
+r1.5
+	- Added sounds
+	- Added a key bind to cancel the current action (recording/deleting)

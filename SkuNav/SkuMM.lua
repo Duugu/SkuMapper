@@ -163,8 +163,8 @@ local function DrawLine(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, aframe, aForc
 end
 
 -----------------------------------------------------------------------------------------------------------------------
+-- game mm
 local function DrawWaypoints(aFrame)
-	--dprint("DrawWaypoints")
 	if SkuOptions.db.profile[MODULE_NAME].showRoutesOnMinimap ~= true then
 		return
 	end
@@ -445,8 +445,9 @@ end
 local SkuNavMMShowCustomWo = false
 local SkuNavMMShowDefaultWo = false
 local tWpFrames = {}
+local tCutOffFactor = 1 --0.6
+-- sku mm
 function SkuNavDrawWaypointsMM(aFrame)
-	--dprint("SkuNavDrawWaypointsMM")
 	local beginTime = debugprofilestop()
 
 	if SkuOptions.db.profile[MODULE_NAME].showRoutesOnMinimap ~= true then
@@ -458,7 +459,6 @@ function SkuNavDrawWaypointsMM(aFrame)
 	end
 	local tRouteColor = {r = 1, g = 1, b = 1, a = 1}
 	local tAreaId = SkuNav:GetCurrentAreaId()
-	--local mapRadius = minimap_size[indoors][zoom]
 	local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
 
 	if not tPlayerContintentId then
@@ -506,7 +506,11 @@ function SkuNavDrawWaypointsMM(aFrame)
 			if tShow == true then
 				if tWP.worldX and tWP.worldY then
 					local tFinalX, tFinalY = SkuNavMMWorldToContent(tWP.worldX, tWP.worldY)
-					if tFinalX > -(tTileSize * 0.6) and tFinalX < (tTileSize * 0.6) and tFinalY > -(tTileSize * 0.6) and tFinalY < (tTileSize * 0.6) then
+					local tBiggerValue = tFinalX
+					if tFinalY > tFinalX then
+						tBiggerValue = tFinalY
+					end
+					if tBiggerValue > -(tTileSize * tCutOffFactor) and tBiggerValue < (tTileSize * tCutOffFactor) then
 						tCountDrawnWPs = tCountDrawnWPs + 1
 
 						local tSize = 4

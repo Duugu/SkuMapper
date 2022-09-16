@@ -776,9 +776,11 @@ function SkuNav:StartRouteRecording(aWPAName, aDeleteFlag)
 	SkuOptions.tmpNpcWayPointNameBuilder_Coords = ""
 
 	if not aDeleteFlag then
-		print("Recording start")
+		print("Recording started: ", aWPAName)
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-on3_1.mp3")
 	else
-		print("Deleting start")
+		print("Deleting started: ", aWPAName)
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-waterdrop2.mp3")
 	end
 end
 
@@ -812,7 +814,11 @@ function SkuNav:EndRouteRecording(aWpName, aDeleteFlag)
 	SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp = nil
 
 	if not aDeleteFlag then
+		print("Recording stopped:", aWPAName)
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-off2.mp3")
 	else
+		print("Deleting stopped:", aWPAName)
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-waterdrop1.mp3")
 	end
 
 end
@@ -1179,12 +1185,15 @@ function SkuNav:OnMouseLeftHold()
 
 end
 
+
+
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouseLeftUp()
 	if IsShiftKeyDown() then
 		--Create WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link deleting in progress.")
+			SkuNav:PlayFailSound()
 			return
 		end
 		local tWy, tWx = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
@@ -1204,6 +1213,7 @@ function SkuNav:OnMouseLeftUp()
 		--Add comment to WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link recording or deleting in progress.")
+			SkuNav:PlayFailSound()
 		else
 			if SkuWaypointWidgetCurrent then
 				SkuOptions:AddCommentToWp(SkuWaypointWidgetCurrent)
@@ -1213,6 +1223,7 @@ function SkuNav:OnMouseLeftUp()
 		--Start/end link add
 		if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link deleting in progress.")
+			SkuNav:PlayFailSound()
 		else
 			local tWpName = SkuWaypointWidgetCurrent
 			if not tWpName then
@@ -1225,11 +1236,11 @@ function SkuNav:OnMouseLeftUp()
 			end
 		
 			if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
-				print("Start:", tWpName)
+				--print("Start:", tWpName)
 				SkuNav:StartRouteRecording(tWpName)
 			else
 				if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete ~= true then
-					print("End:", tWpName)
+					--print("End:", tWpName)
 					SkuNav:EndRouteRecording(tWpName)
 				end
 			end
@@ -1254,6 +1265,7 @@ function SkuNav:OnMouseRightUp()
 		--Delete comments from WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link recording or deleting in progress.")
+			SkuNav:PlayFailSound()
 		else
 
 			if not SkuWaypointWidgetCurrent then
@@ -1276,6 +1288,7 @@ function SkuNav:OnMouseRightUp()
 		--Delete WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link recording or deleting in progress.")
+			SkuNav:PlayFailSound()
 		else
 			if SkuWaypointWidgetCurrent then
 				local wpObj = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
@@ -1289,6 +1302,7 @@ function SkuNav:OnMouseRightUp()
 		--Start/end link delete
 		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true and SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete ~= true then
 			print("not possible. link recording in progress.")
+			SkuNav:PlayFailSound()
 		else
 			local tWpName = SkuWaypointWidgetCurrent
 			if not tWpName then
@@ -1301,11 +1315,11 @@ function SkuNav:OnMouseRightUp()
 			end
 		
 			if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
-				print("Start:", tWpName)
+				--print("Start:", tWpName)
 				SkuNav:StartRouteRecording(tWpName, true)
 			else
 				if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
-					print("End:", tWpName)	
+					--print("End:", tWpName)	
 					SkuNav:EndRouteRecording(tWpName, true)
 				end
 			end
@@ -1319,6 +1333,7 @@ function SkuNav:OnMouse4Down()
 	--start Move WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 		print("not possible. link recording or deleting in progress.")
+		SkuNav:PlayFailSound()
 	else
 		local tWpName = SkuWaypointWidgetCurrent
 		if tWpName then
@@ -1357,6 +1372,7 @@ function SkuNav:OnMouse4Up()
 	--End Move WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 		print("not possible. link recording or deleting in progress.")
+		SkuNav:PlayFailSound()
 	else
 		if tCurrentDragWpName then
 			local tWpData = SkuNav:GetWaypointData2(tCurrentDragWpName)
@@ -1394,6 +1410,7 @@ function SkuNav:OnMouseMiddleUp()
 	--Rename WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 		print("not possible. link recording or deleting in progress.")
+		SkuNav:PlayFailSound()
 	else
 		if SkuWaypointWidgetCurrent then
 			local tOldName = SkuWaypointWidgetCurrent
@@ -1401,12 +1418,14 @@ function SkuNav:OnMouseMiddleUp()
 			if tWpData then
 				if tWpData.typeId ~= 1 then
 					print("only custom waypoints can be renamed")
+					SkuNav:PlayFailSound()
 					return
 				end
-				SkuOptions:EditBoxShow("test", function(a, b, c) 
+				SkuOptions:EditBoxShow("", function(a, b, c) 
 					local tText = SkuOptionsEditBoxEditBox:GetText() 
 					if tText ~= "" then
 						SkuOptions:RenameWp(tOldName, tText)
+						SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
 						print("renamed")
 					else
 						print("name empty")
@@ -1607,6 +1626,8 @@ function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint
 		end
 	end
 
+	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
+
 	return aName
 end
 
@@ -1783,6 +1804,7 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
 
 	if tWpData.typeId ~= 1 then
 		print("Only custom waypoints can be deleted")
+		SkuNav:PlayFailSound()
 		return false
 	end
 
@@ -1790,6 +1812,7 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
 	local tCacheIndex = WaypointCacheLookupAll[aWpName] 
 	if not SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] then
 		print("Error: waypoint nil in db")
+		SkuNav:PlayFailSound()
 	else
 		--remove from links db
 
@@ -1825,6 +1848,8 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
 
 		--delete from waypoint db
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] = {false}
+
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
 	end
 	
 	SkuNav:SaveLinkDataToProfile()
@@ -1883,4 +1908,28 @@ function SkuNav:GetWpDataFromId(id)
 	end	
 
 	return typeId, dbIndex, spawn, areaId
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:OnCancelRecording()
+	SkuNav:EndRouteRecording(SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp)
+	SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp = nil
+
+	SkuOptions.db.profile[MODULE_NAME].routeRecording = false
+	SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete = false
+
+	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification12.mp3")
+	print("Recording/deleting stopped or canceled")
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:PlayFailSound()
+	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-glass1.mp3", true)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:PlaySoundFile(aFileName, aIsFail)
+	if SkuOptions.db.profile[MODULE_NAME].enableSounds == true then
+		PlaySoundFile(aFileName)
+	end
 end

@@ -5,8 +5,20 @@ SkuNav.options = {
 	name = MODULE_NAME,
 	type = "group",
 	args = {
+		enableSounds = {
+			order = 1,
+			name = "Play sounds on actions",
+			desc = "",
+			type = "toggle",
+			set = function(info,val)
+				SkuOptions.db.profile[MODULE_NAME].enableSounds = val
+			end,
+			get = function(info)
+				return SkuOptions.db.profile[MODULE_NAME].enableSounds
+			end
+		},	
 		showGatherWaypoints = {
-			order = 16,
+			order = 4,
 			name = L["Show herbs and mining node waypoints"],
 			desc = "",
 			type = "toggle",
@@ -18,7 +30,7 @@ SkuNav.options = {
 			end
 		},	
 		showRoutesOnMinimap = {
-			order = 17,
+			order = 3,
 			name = L["Show routes on minimap"],
 			desc = "",
 			type = "toggle",
@@ -30,7 +42,7 @@ SkuNav.options = {
 			end
 		},
 		showSkuMM = {
-			order = 18,
+			order = 2,
 			name = L["Show extra minimap"],
 			desc = "",
 			type = "toggle",
@@ -48,5 +60,6 @@ SkuNav.defaults = {
 	showRoutesOnMinimap = false,
 	showSkuMM = false,
 	showGatherWaypoints = false,
+	enableSounds = true,
 }
 

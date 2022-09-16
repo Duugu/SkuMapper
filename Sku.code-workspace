@@ -23,6 +23,9 @@
 		{
 			"name": "Libs",
 			"path": "Libs"
+		},
+		{
+			"path": "audio"
 		}
 	]
 }
