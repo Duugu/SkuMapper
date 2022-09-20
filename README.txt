@@ -38,6 +38,12 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r1.8
+	- Fixed incorrect path data
+
+r1.7
+	- Fixed missing SkuDB link
+
 r1.6
 	- Bug fixes
 	- Removed controls for recording special areas
