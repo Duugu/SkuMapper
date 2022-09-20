@@ -445,7 +445,7 @@ end
 local SkuNavMMShowCustomWo = false
 local SkuNavMMShowDefaultWo = false
 local tWpFrames = {}
-local tCutOffFactor = 1 --0.6
+local tCutOffFactor = 0.6
 -- sku mm
 function SkuNavDrawWaypointsMM(aFrame)
 	local beginTime = debugprofilestop()

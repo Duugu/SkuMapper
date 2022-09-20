@@ -184,6 +184,7 @@ function SkuOptions:PLAYER_ENTERING_WORLD(...)
 	SkuOptions.db.profile["SkuOptions"] = SkuOptions.db.profile["SkuOptions"] or {}
 	SkuOptions.db.profile["SkuOptions"].debugOptions = SkuOptions.db.profile["SkuOptions"].debugOptions or {}
 	SkuOptions.db.profile["SkuOptions"].debugOptions.soundOnError = true
+	SkuOptions.db.profile["SkuNav"].showPolyControls = SkuOptions.db.profile["SkuNav"].showPolyControls or false
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -675,6 +676,7 @@ function SkuOptions:ExportUntranslated()
 	end)
 end
 
+---------------------------------------------------------------------------------------------------------------------------------------
 --/script SkuOptions:ImportTranslated()
 function SkuOptions:ImportTranslated()
 	PlaySound(88)
@@ -725,5 +727,183 @@ function SkuOptions:ImportTranslated()
 		end
 
 		SkuNav:CreateWaypointCache()
+	end)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuOptions:ImportAndMerge()
+	PlaySound(88)
+
+	SkuOptions:EditBoxPasteShow("", function(self)
+		PlaySound(89)
+		local tSerializedData = strtrim(table.concat(_G["SkuOptionsEditBoxPaste"].SkuOptionsTextBuffer))
+
+		local tImportCounterLinks = 0
+		local tImportCounterWps = 0
+		local tIgnoredCounterWps = 0
+
+		if tSerializedData ~= "" then
+			local tSuccess, tVersion, tLinks, tWaypoints = SkuOptions:Deserialize(tSerializedData)
+
+			if tSuccess ~= true then
+				return
+			end
+
+
+			--do tWaypoints 
+			local tFullCounterWps = 0
+			SkuOptions.db.global["SkuNav"].ToMergeWaypoints = {}
+			for tIndex, tWpData in ipairs(tWaypoints) do
+				if not SkuOptions.db.global["SkuNav"].ToMergeWaypoints[tIndex] then
+					table.insert(SkuOptions.db.global["SkuNav"].ToMergeWaypoints, tWpData)
+					tImportCounterWps = tImportCounterWps + 1
+				else
+					tIgnoredCounterWps = tIgnoredCounterWps + 1
+				end
+				tFullCounterWps = tFullCounterWps + 1
+			end
+
+
+			--do tLinks
+			for i, v in pairs(tLinks) do
+				tImportCounterLinks = tImportCounterLinks + 1
+			end
+			SkuOptions.db.global["SkuNav"].ToMergeLinks = {}
+			SkuOptions.db.global["SkuNav"].ToMergeLinks = tLinks
+
+			--done
+			print("Version:", tVersion)
+			print("Links to merge imported:", tImportCounterLinks)
+			print("Waypoints to merge imported:", tImportCounterWps)
+			print("Waypoints to merge ignored:", tIgnoredCounterWps)
+
+
+
+			local tMergeWaypointsToUpdate = {}
+			local tCount = 0
+			local tAreaIdsToUpdate = {}
+			--find wp to merge
+			for tIndex, tWpData in ipairs(SkuOptions.db.global["SkuNav"].ToMergeWaypoints) do
+				local tIsNew
+
+				if tWpData[1] ~= false then
+					if not SkuOptions.db.global["SkuNav"].Waypoints[tIndex] 
+						then
+							tIsNew = true
+					elseif SkuOptions.db.global["SkuNav"].Waypoints[tIndex][1] == false and tWpData[1] ~= false 
+						then
+							tIsNew = true
+					elseif
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex][1] == false and tWpData[1] == false
+						then
+							--nop
+					elseif
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex].contintentId ~= tWpData.contintentId or
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex].worldY ~= tWpData.worldY or
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex].worldX ~= tWpData.worldX or
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex].areaId ~= tWpData.areaId or
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex].names["deDE"] ~= tWpData.names["deDE"] or
+						SkuOptions.db.global["SkuNav"].Waypoints[tIndex].names["enUS"] ~= tWpData.names["enUS"]
+						then
+							tIsNew = true
+					end
+
+					if tIsNew then
+
+						if not tAreaIdsToUpdate[tWpData.areaId] then
+							tAreaIdsToUpdate[tWpData.areaId] = 1
+						else
+							tAreaIdsToUpdate[tWpData.areaId] = tAreaIdsToUpdate[tWpData.areaId] + 1
+						end
+
+						local ttIndex = #tMergeWaypointsToUpdate + 1
+						tMergeWaypointsToUpdate[ttIndex] = {
+							oldIndex = tIndex,
+							newIndex = #SkuOptions.db.global["SkuNav"].Waypoints + ttIndex,
+							oldId = SkuNav:BuildWpIdFromData(1, tIndex, 1, tWpData.areaId), --typeId, dbIndex, spawn, areaId
+							newId = SkuNav:BuildWpIdFromData(1, #SkuOptions.db.global["SkuNav"].Waypoints + ttIndex, 1, tWpData.areaId), --typeId, dbIndex, spawn, areaId
+							oldData = tWpData,
+						}
+						tCount = tCount + 1
+					end
+				end
+			end
+			print("tMergeWaypointsToUpdate", tCount)
+			for i, v in pairs(tAreaIdsToUpdate) do
+				print("  ", i, v)
+			end
+
+
+			--update links in to merge
+			local tCount = 0
+			local tCount1 = 0
+			local tAreaIdsToUpdate = {}
+
+			for tIndex, tData in pairs(tMergeWaypointsToUpdate) do
+				if SkuOptions.db.global["SkuNav"].ToMergeLinks[tData.oldId] then
+					local t = SkuOptions.db.global["SkuNav"].ToMergeLinks[tData.oldId]
+					SkuOptions.db.global["SkuNav"].ToMergeLinks[tData.newId] = t
+					SkuOptions.db.global["SkuNav"].ToMergeLinks[tData.oldId] = nil
+					tCount = tCount + 1
+					if not tAreaIdsToUpdate[tData.oldData.areaId] then
+						tAreaIdsToUpdate[tData.oldData.areaId] = 1
+					else
+						tAreaIdsToUpdate[tData.oldData.areaId] = tAreaIdsToUpdate[tData.oldData.areaId] + 1
+					end					
+				end
+			end
+
+			for tIndex, tData in pairs(tMergeWaypointsToUpdate) do
+				for i, v in pairs(SkuOptions.db.global["SkuNav"].ToMergeLinks) do
+					if v[tData.oldId] then
+						local t = v[tData.oldId]
+						v[tData.newId] = t
+						v[tData.oldId] = nil
+						tCount1 = tCount1 + 1
+						if not tAreaIdsToUpdate[tData.oldData.areaId] then
+							tAreaIdsToUpdate[tData.oldData.areaId] = 1
+						else
+							tAreaIdsToUpdate[tData.oldData.areaId] = tAreaIdsToUpdate[tData.oldData.areaId] + 1
+						end	
+					end
+				end
+			end
+
+			print("tCount, tCount1", tCount, tCount1)
+			for i, v in pairs(tAreaIdsToUpdate) do
+				print("  ", i, v)
+			end
+
+
+			--insert new wps
+			local tCount = 0
+			for tIndex, tData in pairs(tMergeWaypointsToUpdate) do
+				local tDat = tData.oldData
+				SkuOptions.db.global["SkuNav"].Waypoints[tData.newIndex] = tDat
+				tCount = tCount + 1
+			end
+			print("added wps", tCount)
+
+			--insert and update links
+			local tNewLinks = 0
+			local tNewDist = 0
+			for i, v in pairs(SkuOptions.db.global["SkuNav"].ToMergeLinks) do
+				if not SkuOptions.db.global["SkuNav"].Links[i] then
+					SkuOptions.db.global["SkuNav"].Links[i] = v
+					tNewLinks = tNewLinks + 1
+				end
+				for i1, v1 in pairs(v) do
+					if not SkuOptions.db.global["SkuNav"].Links[i][i1] then
+						SkuOptions.db.global["SkuNav"].Links[i][i1] = v1
+						tNewDist = tNewDist + 1
+					end
+				end
+			end
+			print("tNewLinks, tNewDist", tNewLinks, tNewDist)
+
+
+			SkuNav:CreateWaypointCache()
+			SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+		end
 	end)
 end

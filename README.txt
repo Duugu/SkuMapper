@@ -38,6 +38,10 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r1.6
+	- Bug fixes
+	- Removed controls for recording special areas
+
 r1.5
 	- Added sounds
 	- Added a key bind to cancel the current action (recording/deleting)

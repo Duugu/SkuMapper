@@ -334,7 +334,7 @@ function SkuNav:CheckAndUpdateProfileLinkData()
 	end
 
 	if tDeletedCounter and tDeletedCounter > 0 then
-		print("Error: deletedCounter > 0; this should not happen", tDeletedCounter)
+		--print("Error: deletedCounter > 0; this should not happen", tDeletedCounter)
 	end
 end
 
@@ -1577,7 +1577,7 @@ function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint
 	if aName == nil then
 		-- this generates (almost) unique auto wp numbers, to avoid duplicates and renaming on import/export of WPs and Rts later on
 		-- numbers > 1000000 are not vocalized by SkuVoice; thus they are silent, even if they are part of the auto WP names
-		local tNumber = tostring(GetServerTime()..GetTimePreciseSec())
+		local tNumber = string.gsub(tostring(GetServerTime()..format("%.2f", GetTimePreciseSec())), "%.", "")
 		local tAutoIndex = tNumber:gsub("%.", "")
 		if SkuNav:GetWaypointData2(L["auto"]..";"..tAutoIndex) ~= nil then
 			while SkuNav:GetWaypointData2(L["auto"]..";"..tAutoIndex)  ~= nil do
