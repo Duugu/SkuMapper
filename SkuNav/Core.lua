@@ -777,10 +777,10 @@ function SkuNav:StartRouteRecording(aWPAName, aDeleteFlag)
 
 	if not aDeleteFlag then
 		print("Recording started: ", aWPAName)
-		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-on3_1.mp3")
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-on3_1.mp3")
 	else
 		print("Deleting started: ", aWPAName)
-		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-waterdrop2.mp3")
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-waterdrop2.mp3")
 	end
 end
 
@@ -815,10 +815,10 @@ function SkuNav:EndRouteRecording(aWpName, aDeleteFlag)
 
 	if not aDeleteFlag then
 		print("Recording stopped:", aWPAName)
-		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-off2.mp3")
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-off2.mp3")
 	else
 		print("Deleting stopped:", aWPAName)
-		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-waterdrop1.mp3")
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-waterdrop1.mp3")
 	end
 
 end
@@ -1425,7 +1425,7 @@ function SkuNav:OnMouseMiddleUp()
 					local tText = SkuOptionsEditBoxEditBox:GetText() 
 					if tText ~= "" then
 						SkuOptions:RenameWp(tOldName, tText)
-						SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-notification15.mp3")
+						SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
 						print("renamed")
 					else
 						print("name empty")
@@ -1626,7 +1626,7 @@ function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint
 		end
 	end
 
-	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-notification15.mp3")
+	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
 
 	return aName
 end
@@ -1849,7 +1849,7 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
 		--delete from waypoint db
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] = {false}
 
-		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-notification15.mp3")
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
 	end
 	
 	SkuNav:SaveLinkDataToProfile()
@@ -1918,18 +1918,18 @@ function SkuNav:OnCancelRecording()
 	SkuOptions.db.profile[MODULE_NAME].routeRecording = false
 	SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete = false
 
-	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-notification12.mp3")
+	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification12.mp3")
 	print("Recording/deleting stopped or canceled")
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:PlayFailSound()
-	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapperMapper\\audio\\sound-glass1.mp3", true)
+	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-glass1.mp3", true)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:PlaySoundFile(aFileName, aIsFail)
-	if SkuOptions.db.profile[MODULE_NAME].enableSounds == true then
+	if SkuOptions.db.profile[MODULE_NAME].enableSounds ~= false then
 		PlaySoundFile(aFileName)
 	end
 end

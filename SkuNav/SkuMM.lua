@@ -696,6 +696,28 @@ function SkuNav:SkuNavMMOpen()
 			MainFrameObj:RegisterForDrag("LeftButton")
 			MainFrameObj:Show()
 
+			--pos fs
+			local MainFramePosFsFrame = CreateFrame("Frame", "SkuNavMMMainFramePosFs", MainFrameObj, BackdropTemplateMixin and "BackdropTemplate" or nil)
+			MainFramePosFsFrame:SetPoint("TOPRIGHT", MainFrameObj, "TOPRIGHT", 0, 0)
+			--MainFramePosFsFrame:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background", edgeFile="", tile = false, tileSize = 0, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 }})
+			--MainFramePosFsFrame:SetBackdropColor(1, 1, 1, 1)
+			MainFramePosFsFrame:SetFrameStrata("TOOLTIP")
+			MainFramePosFsFrame:SetHeight(1)
+			MainFramePosFsFrame:SetWidth(1)
+			MainFramePosFsFrame:Show()
+			fs = MainFramePosFsFrame:CreateFontString("MousePosText")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPRIGHT", MainFramePosFsFrame, "TOPRIGHT", -5, -5)
+			fs:SetText("MousePosText")
+			fs:Show()
+			fs = MainFramePosFsFrame:CreateFontString("PlayerPosText")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPRIGHT", _G["MousePosText"], "TOPRIGHT", 0, -14)
+			fs:SetText("PlayerPosText")
+			fs:Show()			
+
 			-- Resizable
 			MainFrameObj:SetResizable(true)
 			MainFrameObj:SetMinResize(300, 300)
@@ -1243,6 +1265,61 @@ function SkuNav:SkuNavMMOpen()
 						self.tStartMoveX, self.tStartMoveY = SkuNavMMGetCursorPositionContent2()
 					end
 					SkuNavMMUpdateContent()			
+
+					-- update coords fs
+					if _G["MousePosText"] then
+						--[[
+						local tWy, tWx = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
+						--print(tWy, tWx)
+						local vec = CreateVector2D(tWx, tWy)
+						local _, _, tPlayerContinentID  = SkuNav:GetAreaData(SkuNav:GetCurrentAreaId())
+						local mapID = C_Map.GetBestMapForUnit("player");
+						local tAreaId = SkuNav:GetCurrentAreaId()
+						local tZoneName, tAreaName_lang, tContinentID, tParentAreaID, tFaction, tFlags = SkuNav:GetAreaData(tAreaId)
+						local uiMapID, mapPosition = C_Map.GetMapPosFromWorldPos(tParentAreaID, vec)
+						local tmapx, tmapy = mapPosition:GetXY()
+						--print(tmapx, tmapy)
+						local tZx, tZy = format("%.1f", tmapx * 100), format("%.1f", tmapy * 100)
+						_G["MousePosText"]:SetText(tZx.." "..tZy)
+]]
+						--[[
+						if WorldMapFrame then
+							-- get cursor position
+							local curX, curY = GetCursorPosition();
+
+							local scale = WorldMapFrame:GetCanvas():GetEffectiveScale();
+							curX = curX / scale;
+							curY = curY / scale;
+							print("c", curX, curY)
+
+							local width = WorldMapFrame:GetCanvas():GetWidth();
+							local height = WorldMapFrame:GetCanvas():GetHeight();
+							local left = WorldMapFrame:GetCanvas():GetLeft();
+							local top = WorldMapFrame:GetCanvas():GetTop();
+
+							curX = (curX - left) / width * 100;
+							curY = (top - curY) / height * 100;
+							print("m", curX, curY)
+							--local precision = "%.".. Questie.db.global.mapCoordinatePrecision .."f";
+
+							--local worldmapCoordsText = "Cursor: "..format(precision.. " X, ".. precision .." Y  ", curX, curY);
+
+							--worldmapCoordsText = worldmapCoordsText.."|  Player: "..format(precision.. " X , ".. precision .." Y", posX, posY);
+							-- Add text to world map
+							--GetMapTitleText():SetText(worldmapCoordsText)
+						end
+						]]
+
+						local mapID = C_Map.GetBestMapForUnit("player");
+						if mapID then
+							local position = C_Map.GetPlayerMapPosition(mapID, "player");
+							local posX = position.x * 100;
+							local posY = position.y * 100;
+							local tZx, tZy = format("%.1f", posX), format("%.1f", posY)
+							_G["PlayerPosText"]:SetText(tZx.." "..tZy)
+						end
+					end
+										
 					SkuNavMMMainFrameScrollFrameContenttTime = 0
 				end
 				--[[

@@ -38,6 +38,15 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r2.1
+	- Added player coords to map
+
+r2
+	- Added updated data to item, quest, creature and object databases
+
+r1.9
+	- Fixed the missing sounds
+
 r1.8
 	- Fixed incorrect path data
 
