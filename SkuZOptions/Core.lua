@@ -537,6 +537,13 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:RenameWp(aOldName, aNewName)
 	--print("rename", aOldName, aNewName)
+
+	local tNewName = SkuNav:GetWaypointData2(aNewName)
+	if tNewName then
+		print("name already exists")
+		return false
+	end
+
 	local tWpData = SkuNav:GetWaypointData2(aOldName)
 
 	if tWpData.typeId ~= 1 then
@@ -668,6 +675,9 @@ function SkuOptions:ExportUntranslated()
 			if tCoCompleted == false then
 				print("wp completed")
 				tCoCompleted = true
+
+				--local tClean = string.gsub(tFinalString, "    [\"name\"] = \"", "TNA = ")
+				--tClean = string.gsub(tClean, "\",\\r\\n] = \"", "")
 				
 				SkuOptions:EditBoxShow(tFinalString, function(self) PlaySound(89) end)
 			end

@@ -218,8 +218,13 @@ local function DrawWaypoints(aFrame)
 					end
 				elseif tWP.typeId == 3 then
 					--green
-					tWpFrames[v] = DrawWaypointWidget(tFinalX, tFinalY,  1,   1, 4, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
-					tWpFrames[v].hasLine = false
+					if tWP.spawnNr > 3 then
+						tWpFrames[v] = DrawWaypointWidget(tFinalX, tFinalY,  1,   1, 4, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
+						tWpFrames[v].hasLine = false
+					else
+						tWpFrames[v] = DrawWaypointWidget(tFinalX, tFinalY,  1,   1, 4, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.35, 0.7, 0, 1, tWP.comments[Sku.Loc])
+						tWpFrames[v].hasLine = false
+					end
 				else
 					--white
 					tWpFrames[v] = DrawWaypointWidget(tFinalX, tFinalY,  1,   1, 4, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])
@@ -529,8 +534,13 @@ function SkuNavDrawWaypointsMM(aFrame)
 							end
 						elseif tWP.typeId == 3 then
 							--green
-							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
-							tWpFrames[v].hasLine = false
+							if tWP.spawnNr > 3 then
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
+								tWpFrames[v].hasLine = false
+							else
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc])
+								tWpFrames[v].hasLine = false
+							end
 						else
 							--white
 							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])

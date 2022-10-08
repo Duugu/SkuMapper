@@ -38,6 +38,10 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r2.2
+	- Object waypoints (green): first 3 are now shown in yellow and the "limit" filter is applied to them
+	- Added a check for existing names on renaming waypoints
+
 r2.1
 	- Added player coords to map
 

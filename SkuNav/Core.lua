@@ -1424,11 +1424,17 @@ function SkuNav:OnMouseMiddleUp()
 				SkuOptions:EditBoxShow("", function(a, b, c) 
 					local tText = SkuOptionsEditBoxEditBox:GetText() 
 					if tText ~= "" then
-						SkuOptions:RenameWp(tOldName, tText)
-						SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
-						print("renamed")
+						if SkuOptions:RenameWp(tOldName, tText) ~= false then
+							SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
+							print("renamed")
+						else
+							print("renaming failed")
+							SkuNav:PlayFailSound()
+						end
 					else
+						print("renaming failed")
 						print("name empty")
+						SkuNav:PlayFailSound()
 					end
 				end)
 				print("enter new name and press enter or press escape to cancel")
