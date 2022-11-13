@@ -520,31 +520,44 @@ function SkuNavDrawWaypointsMM(aFrame)
 
 						local tSize = 4
 						
-						if tWP.typeId == 1 or tWP.typeId == 4 then
-							--red
-							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 0, 0, 1, tWP.comments[Sku.Loc])
+						local tFilter
+						if SkuOptions.db.profile["SkuNav"].waypointFilterString ~= "" then
+							if string.find(slower(tWP.name), slower(SkuOptions.db.profile["SkuNav"].waypointFilterString)) then
+								tFilter = true
+							end
+						end
+
+						if tFilter then
+							tSize = 8
+							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])
 							tWpFrames[v].hasLine = false
-						elseif tWP.typeId == 2 then
-							if tWP.spawnNr > 3 then
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.3, 0.7, 0.7, 1, tWP.comments[Sku.Loc])
-								tWpFrames[v].hasLine = false
-							else
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 0.3, 0.7, 1, tWP.comments[Sku.Loc])
-								tWpFrames[v].hasLine = false
-							end
-						elseif tWP.typeId == 3 then
-							--green
-							if tWP.spawnNr > 3 then
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
-								tWpFrames[v].hasLine = false
-							else
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc])
-								tWpFrames[v].hasLine = false
-							end
 						else
-							--white
-							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])
-							tWpFrames[v].hasLine = false
+							if tWP.typeId == 1 or tWP.typeId == 4 then
+									--red
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 0, 0, 1, tWP.comments[Sku.Loc])
+								tWpFrames[v].hasLine = false
+							elseif tWP.typeId == 2 then
+								if tWP.spawnNr > 3 then
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.3, 0.7, 0.7, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v].hasLine = false
+								else
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 0.3, 0.7, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v].hasLine = false
+								end
+							elseif tWP.typeId == 3 then
+								--green
+								if tWP.spawnNr > 3 then
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v].hasLine = false
+								else
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v].hasLine = false
+								end
+							else
+								--white
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])
+								tWpFrames[v].hasLine = false
+							end
 						end
 
 						local tFinalSize = tSize
@@ -1243,6 +1256,30 @@ function SkuNav:SkuNavMMOpen()
 				_G["SkuNavMMMainEditBoxEditBox"]:ClearFocus()
 			end)
 			sf:SetScrollChild(eb)
+
+			-- filter EditBox
+			local f = CreateFrame("Frame", "SkuNavMMMainFrameFilterEditBox", tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
+			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 2, -60)
+			f:SetSize(286, 20)
+			f:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile = "", Size = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0, .44, .87, 0.5) -- darkblue
+			f:Show()
+			local eb = CreateFrame("EditBox", "SkuNavMMMainFrameFilterEditBoxEditBox", _G["SkuNavMMMainFrameFilterEditBox"])
+			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+			eb:SetSize(f:GetSize())
+			eb:SetMultiLine(false)
+			eb:SetAutoFocus(false)
+			eb:SetFontObject("ChatFontSmall")
+			eb:SetScript("OnEscapePressed", function(self) 
+				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+			eb:SetScript("OnEnterPressed", function(self) 
+				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
 
 			----------------------------map
 			--map frame main container

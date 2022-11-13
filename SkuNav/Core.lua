@@ -1543,6 +1543,7 @@ end
 function SkuNav:PLAYER_ENTERING_WORLD(aEvent, aIsInitialLogin, aIsReloadingUi)
 	SkuOptions.db.profile[MODULE_NAME].metapathFollowing = false
 	SkuOptions.db.profile[MODULE_NAME].routeRecording = false
+	SkuOptions.db.profile["SkuNav"].waypointFilterString = ""
 
 	SkuNav:CreateWaypointCache()
 

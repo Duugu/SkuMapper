@@ -38,6 +38,9 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r2.3
+	- There is a new input box to enter filter terms for waypoints. Found waypoints are shown in white with double size.
+
 r2.2
 	- Object waypoints (green): first 3 are now shown in yellow and the "limit" filter is applied to them
 	- Added a check for existing names on renaming waypoints
