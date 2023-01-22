@@ -38,6 +38,9 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r2.4
+	- Updated the toc for Ulduar patch.
+
 r2.3
 	- There is a new input box to enter filter terms for waypoints. Found waypoints are shown in white with double size.
 

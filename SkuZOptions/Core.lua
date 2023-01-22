@@ -147,6 +147,10 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:OnInitialize()
+	-- tmp fixes for 30401 ptr, remove after 30401 release
+	Sku = Sku or {}
+	Sku.toc = select(4, GetBuildInfo())
+
 	if SkuNav then
 		options.args["SkuNav"] = SkuNav.options
 		defaults.profile["SkuNav"] = SkuNav.defaults
@@ -251,7 +255,11 @@ function SkuOptions:EditBoxShow(aText, aOkScript)
 
 		-- Resizable
 		f:SetResizable(true)
-		f:SetMinResize(150, 100)
+		if Sku.toc < 30401 then
+			f:SetMinResize(150, 100)
+		else
+			f:SetResizeBounds(150, 100)
+		end	
 
 		local rb = CreateFrame("Button", "SkuOptionsEditBoxResizeButton", SkuOptionsEditBox)
 		rb:SetPoint("BOTTOMRIGHT", -6, 7)
