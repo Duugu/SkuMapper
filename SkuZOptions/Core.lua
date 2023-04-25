@@ -42,6 +42,13 @@ function SkuOptions:SlashFunc(input, aSilent)
 	local pattern = string.format("([^%s]+)", sep)
 	input:gsub(pattern, function(c) fields[#fields+1] = c end)
 
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+
+
 	if fields then
 		if fields[1] == "version" then
 			local name, title, notes, enabled, loadable, reason, security = GetAddOnInfo("Sku")
@@ -401,7 +408,7 @@ function SkuOptions:EditBoxPasteShow(aText, aOkScript)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
-function SkuOptions:ImportWpAndLinkData()
+function SkuOptions:ImportWpAndLinkData(aForce)
 	PlaySound(88)
 
 	SkuOptions:EditBoxPasteShow("", function(self)
@@ -413,16 +420,19 @@ function SkuOptions:ImportWpAndLinkData()
 		local tIgnoredCounterWps = 0
 
 		if tSerializedData ~= "" then
-			local tSuccess, tVersion, tLinks, tWaypoints = SkuOptions:Deserialize(tSerializedData)
-
-			--if tVersion ~= 22 then
-				--return
-			--end
+			SkuOptions.db.profile["SkuNav"].routeRecording = false
+			SkuOptions.db.profile["SkuNav"].routeRecordingLastWp = nil
+		
+			local tSuccess, tVersion, tLinks, tWaypoints, tSequenceNumbers, tWaypointLevels = SkuOptions:Deserialize(tSerializedData)
+			
+			if not tSequenceNumbers and not aForce then
+				print("Error: incompatible map data")
+				return
+			end
 			if tSuccess ~= true then
 				return
 			end
-
-
+			
 			--do tWaypoints 
 			local tFullCounterWps = 0
 			SkuOptions.db.global["SkuNav"].Waypoints = {}
@@ -444,11 +454,27 @@ function SkuOptions:ImportWpAndLinkData()
 			SkuOptions.db.global["SkuNav"].Links = {}
 			SkuOptions.db.global["SkuNav"].Links = tLinks
 
+
+			--SequenceNumbers
+			SkuOptions.db.global["SkuNav"].SequenceNumbers = tSequenceNumbers or {}
+
+			SkuOptions.db.global["SkuNav"].WaypointLevels = tWaypointLevels or {}
+
 			--done
-			print("Version:", tVersion)
+			print("Data from SkuMapper version:", tVersion)
 			print("Links imported:", tImportCounterLinks)
 			print("Waypoints imported:", tImportCounterWps)
 			print("Waypoints ignored:", tIgnoredCounterWps)
+			local tCount = 0
+			for _, _ in pairs(SkuOptions.db.global["SkuNav"].SequenceNumbers) do
+				tCount = tCount + 1
+			end
+			print("Sequence Numbers imported", tCount)
+			local tCount = 0
+			for _, _ in pairs(SkuOptions.db.global["SkuNav"].WaypointLevels) do
+				tCount = tCount + 1
+			end
+			print("Waypoint layers imported", tCount)
 
 			SkuNav:CreateWaypointCache()
 
@@ -462,14 +488,18 @@ function SkuOptions:ExportWpAndLinkData()
 	SkuNav:SaveLinkDataToProfile()
 
 	local tExportDataTable = {
-		version = GetAddOnMetadata("Sku", "Version"),
+		version = GetAddOnMetadata("SkuMapper", "Version"),
 		links = {},
 		waypoints = {},
+		SequenceNumbers = {},
 	}
 
 	--build Links
 	tExportDataTable.links = SkuOptions.db.global["SkuNav"].Links
 
+	--SequenceNumbers
+	tExportDataTable.SequenceNumbers = SkuOptions.db.global["SkuNav"].SequenceNumbers
+	
 	--build Waypoints
 	for i, v in ipairs(SkuOptions.db.global["SkuNav"].Waypoints) do
 		local tWpData = SkuOptions.db.global["SkuNav"].Waypoints[i]
@@ -479,6 +509,8 @@ function SkuOptions:ExportWpAndLinkData()
 		end
 	end
 	
+	tExportDataTable.WaypointLevels = SkuOptions.db.global["SkuNav"].WaypointLevels or {}
+
 	--complete export
 	PlaySound(88)
 	local tCount = 0
@@ -491,17 +523,27 @@ function SkuOptions:ExportWpAndLinkData()
 		tCount = tCount + 1
 	end
 	print("Waypoints exported", tCount)
-
+	tCount = 0
+	for _, _ in pairs(tExportDataTable.SequenceNumbers) do
+		tCount = tCount + 1
+	end
+	print("Sequence Numbers exported", tCount)
+	tCount = 0
+	for _, _ in pairs(tExportDataTable.WaypointLevels) do
+		tCount = tCount + 1
+	end
+	print("Waypoint layers exported", tCount)
 	
-	SkuOptions:EditBoxShow(SkuOptions:Serialize(tExportDataTable.version, tExportDataTable.links, tExportDataTable.waypoints), function(self) PlaySound(89) end)
+	SkuOptions:EditBoxShow(SkuOptions:Serialize(tExportDataTable.version, tExportDataTable.links, tExportDataTable.waypoints, tExportDataTable.SequenceNumbers, tExportDataTable.WaypointLevels), function(self) PlaySound(89) end)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuOptions:ResetWpAndLinkData()
-	local t = SkuDB.routedata["global"]["Waypoints"]
-	SkuOptions.db.global["SkuNav"].Waypoints = t
-	local tl = SkuDB.routedata["global"]["Links"]
-	SkuOptions.db.global["SkuNav"].Links = tl
+	SkuOptions.db.global["SkuNav"].Waypoints = {}
+	SkuOptions.db.global["SkuNav"].Links = {}
+	SkuOptions.db.global["SkuNav"].WaypointsNew = nil
+	SkuOptions.db.global["SkuNav"].WaypointLevels = {}
+	SkuOptions.db.global["SkuNav"].SequenceNumbers = {}
 	SkuOptions.db.global["SkuNav"].hasCustomMapData = nil
 	SkuNav:PLAYER_ENTERING_WORLD()
 end
@@ -559,26 +601,10 @@ function SkuOptions:RenameWp(aOldName, aNewName)
 		return
 	end
 
-	--save links
-	local tLinks = {}
-	if tWpData.links.byName then
-		for name, distance in pairs(tWpData.links.byName) do
-			tLinks[name] = distance
-		end
-	end
-
-	--delete aOlddName
-	SkuNav:DeleteWaypoint(aOldName)
-
-	--create aNewName
-	SkuNav:CreateWaypoint(aNewName, tWpData.worldX, tWpData.worldY, tWpData.size)
-	SkuNav:SetWaypoint(aNewName, tWpData)
 
 
-	--create links
-	for name, distance in pairs(tLinks) do
-		SkuNav:CreateWpLink(aNewName, name)
-	end
+	SkuNav:UpdateWpName(aOldName, aNewName)
+
 
 end
 

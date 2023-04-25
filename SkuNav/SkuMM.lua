@@ -90,6 +90,29 @@ function SkuNavMMWorldToContent(aPosY, aPosX)
 	return -(aPosX), aPosY
 end
 
+
+------------------------------------------------------------------------------------------------------------------------
+function SkuNav:SkuMM_PLAYER_LOGIN()
+	--[[
+	print("SkuMM_PLAYER_LOGIN")
+
+	if SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsedOnLogout == true then
+		C_Timer.After(20, function()
+			print("xxxxxxxxxxxxxx")
+			--_G["SkuNavMMMainFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() - 300)
+		end)
+	end	
+]]
+end
+
+------------------------------------------------------------------------------------------------------------------------
+function SkuNav:SkuMM_PLAYER_LOGOUT()
+	--[[
+	print("SkuMM_PLAYER_LOGOUT")
+	SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsedOnLogout = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsed
+]]
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:DrawTerrainData(aFrame)
 	--SkuNav:ClearLines(aFrame)
@@ -133,7 +156,7 @@ local function DrawWaypointWidget(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, afr
 	local l = SkuWaypointWidgetRepo:Acquire()
 	l:SetColorTexture(aWpColorR, aWpColorG, aWpColorB)
 	l:SetSize(2, 2)
-	l:SetDrawLayer("OVERLAY")
+	l:SetDrawLayer("OVERLAY", 1)
 	l.aText = aText
 	l.MMx = sx
 	l.MMy = sy
@@ -198,7 +221,6 @@ local function DrawWaypoints(aFrame)
 	local minimapHeight = Minimap:GetHeight() / 2
 
 	for i, v in SkuNav:ListWaypoints2(false, nil, tAreaId, tPlayerContintentId, nil) do
-		--print(i, v)
 		tWP = SkuNav:GetWaypointData2(v)
 		if tWP then
 			if tWP.worldX and tWP.worldY then
@@ -402,7 +424,7 @@ function SkuNavDrawWaypointWidgetMM(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, a
 	l:SetParent(_G["SkuNavMMMainFrameScrollFrameMapMainDraw1"])
 	l:SetColorTexture(aWpColorR, aWpColorG, aWpColorB, aWpColorA)
 	l:SetSize(lineW * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (2 - tSkuNavMMZoom), lineW * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (2 - tSkuNavMMZoom))
-	l:SetDrawLayer("ARTWORK")
+	l:SetDrawLayer("ARTWORK", 1)
 	l.aText = aText
 	l.aComments = aComments
 	l.MMx = sx
@@ -493,9 +515,10 @@ function SkuNavDrawWaypointsMM(aFrame)
 		return
 	end
 	for i, v in SkuNav:ListWaypoints2(false, nil, tAreaId, tPlayerContintentId, nil) do
-		--print(i, v)
 		tWP = SkuNav:GetWaypointData2(v)
 		if tWP then
+			local tTooltipText = v
+
 			tWP.comments = tWP.comments or {["deDE"] = {},["enUS"] = {},}
 			local tShow = false
 			if _G["SkuNavMMMainFrameShowFilter"].selected == true then
@@ -520,6 +543,14 @@ function SkuNavDrawWaypointsMM(aFrame)
 
 						local tSize = 4
 						
+						if WaypointCache[WaypointCacheLookupAll[v]].tackStep ~= nil then
+							tRouteColor = {r = 0.33, g = 0.33, b = 1, a = 1}
+						else
+							tRouteColor = {r = 1, g = 1, b = 1, a = 1}
+						end
+	
+
+
 						local tFilter
 						if SkuOptions.db.profile["SkuNav"].waypointFilterString ~= "" then
 							if string.find(slower(tWP.name), slower(SkuOptions.db.profile["SkuNav"].waypointFilterString)) then
@@ -528,34 +559,33 @@ function SkuNavDrawWaypointsMM(aFrame)
 						end
 
 						if tFilter then
-							tSize = 8
-							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])
+							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 1, 1, 1, tWP.comments[Sku.Loc])
 							tWpFrames[v].hasLine = false
 						else
 							if tWP.typeId == 1 or tWP.typeId == 4 then
 									--red
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 0, 0, 1, tWP.comments[Sku.Loc])
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 0, 0, 1, tWP.comments[Sku.Loc])
 								tWpFrames[v].hasLine = false
 							elseif tWP.typeId == 2 then
 								if tWP.spawnNr > 3 then
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.3, 0.7, 0.7, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0.3, 0.7, 0.7, 1, tWP.comments[Sku.Loc])
 									tWpFrames[v].hasLine = false
 								else
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 0.3, 0.7, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 0.3, 0.7, 1, tWP.comments[Sku.Loc])
 									tWpFrames[v].hasLine = false
 								end
 							elseif tWP.typeId == 3 then
 								--green
 								if tWP.spawnNr > 3 then
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
 									tWpFrames[v].hasLine = false
 								else
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc])
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc])
 									tWpFrames[v].hasLine = false
 								end
 							else
 								--white
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, 1, 1, 1, 1, tWP.comments[Sku.Loc])
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 1, 1, 1, tWP.comments[Sku.Loc])
 								tWpFrames[v].hasLine = false
 							end
 						end
@@ -568,9 +598,13 @@ function SkuNavDrawWaypointsMM(aFrame)
 							end
 						else
 							tFinalSize = 4 + (tSkuNavMMZoom / 12)
-							if tFinalSize > 10 then
-								tFinalSize = 10
+							if tFinalSize > 16 then
+								tFinalSize = 16
 							end
+						end
+
+						if tFilter then
+							tFinalSize = tFinalSize + 3
 						end
 
 						tWpFrames[v]:SetSize(tFinalSize, tFinalSize)--4 * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (3 - tSkuNavMMZoom), tSize * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (3 - tSkuNavMMZoom))
@@ -579,10 +613,27 @@ function SkuNavDrawWaypointsMM(aFrame)
 							if tWP.links.byName then
 								for tName, tDistance in pairs(tWP.links.byName) do
 									if tWpFrames[tName] then
+
+										local tTrack
+										if 
+											WaypointCacheLookupAll[tWP.name] and
+											WaypointCacheLookupAll[tName] and
+											WaypointCache[WaypointCacheLookupAll[tName]] and
+											WaypointCache[WaypointCacheLookupAll[tWP.name]] and
+											WaypointCache[WaypointCacheLookupAll[tWP.name]].tackStep ~= nil and
+											WaypointCache[WaypointCacheLookupAll[tName]].tackStep ~= nil 
+										then
+											tTrack = true
+										end
+
 										tCountDrawnWPs = tCountDrawnWPs + 1
 										local _, relativeTo, _, xOfs, yOfs = tWpFrames[v]:GetPoint(1)
 										local _, PrevrelativeTo, _, PrevxOfs, PrevyOfs = tWpFrames[tName]:GetPoint(1)
-										SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, nil, relativeTo, PrevrelativeTo) 
+										if tTrack then
+											SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, 0.33, 0.33, 1, aFrame, nil, relativeTo, PrevrelativeTo) 
+										else
+											SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, 1, 1, 1, aFrame, nil, relativeTo, PrevrelativeTo) 
+										end
 									end
 								end
 							end
@@ -601,7 +652,7 @@ function SkuNavDrawWaypointsMM(aFrame)
 end
 
 
-local function CreateButtonFrameTemplate(aName, aParent, aText, aWidth, aHeight, aPoint, aRelativeTo, aAnchor, aOffX, aOffY)
+function SkuNav:CreateButtonFrameTemplate(aName, aParent, aText, aWidth, aHeight, aPoint, aRelativeTo, aAnchor, aOffX, aOffY)
 	local tWidget = CreateFrame("Frame",aName, aParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
 	tWidget:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background", edgeFile="", tile = false, tileSize = 0, edgeSize = 0, insets = { left = 2, right = 2, top = 2, bottom = 2 }})
 	tWidget:SetBackdropColor(0.3, 0.3, 0.3, 1)
@@ -674,6 +725,10 @@ function SkuNav:SkuNavMMOpen()
 	SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainHeight = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainHeight or 300
 	SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX or UIParent:GetWidth() / 2
 	SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY or UIParent:GetHeight() / 2
+	if not SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosX then
+		SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosX = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX - 300
+		SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosY = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY
+	end
 
 	if SkuOptions.db.profile[MODULE_NAME].showSkuMM == true then
 		SkuNavMMShowCustomWo = false
@@ -694,7 +749,6 @@ function SkuNav:SkuNavMMOpen()
 				SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY = _G["SkuNavMMMainFrame"]:GetBottom()
 				_G["SkuNavMMMainFrame"]:ClearAllPoints()
 				_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX, SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY)
-
 			end)
 			MainFrameObj:SetScript("OnShow", function(self)
 				local children = {_G["SkuNavMMMainFrameOptionsParent"]:GetChildren()}
@@ -761,26 +815,26 @@ function SkuNav:SkuNavMMOpen()
 				if SkuOptions.db.profile[MODULE_NAME].showSkuMM == true then
 					if tRbIsDrag == true then
 						self:GetHighlightTexture():Show()
-						if self:GetParent():GetWidth() < 300 +  _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() then self:GetParent():SetWidth(300  + _G["SkuNavMMMainFrameOptionsParent"]:GetWidth()) end
+						if self:GetParent():GetWidth() < 300  then self:GetParent():SetWidth(300  ) end
 						if self:GetParent():GetHeight() < 300 then self:GetParent():SetHeight(300) end
-						_G["SkuNavMMMainFrameScrollFrame"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+						_G["SkuNavMMMainFrameScrollFrame"]:SetWidth(self:GetParent():GetWidth()  - 10)
 						_G["SkuNavMMMainFrameScrollFrame"]:SetHeight(self:GetParent():GetHeight() - 10)
-						_G["SkuNavMMMainFrameScrollFrame1"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+						_G["SkuNavMMMainFrameScrollFrame1"]:SetWidth(self:GetParent():GetWidth()  - 10)
 						_G["SkuNavMMMainFrameScrollFrame1"]:SetHeight(self:GetParent():GetHeight() - 10)
 
-						_G["SkuNavMMMainFrameScrollFrameContent"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+						_G["SkuNavMMMainFrameScrollFrameContent"]:SetWidth(self:GetParent():GetWidth()  - 10)
 						_G["SkuNavMMMainFrameScrollFrameContent"]:SetHeight(self:GetParent():GetHeight() - 10)
-						_G["SkuNavMMMainFrameScrollFrameContent1"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+						_G["SkuNavMMMainFrameScrollFrameContent1"]:SetWidth(self:GetParent():GetWidth()  - 10)
 						_G["SkuNavMMMainFrameScrollFrameContent1"]:SetHeight(self:GetParent():GetHeight() - 10)
 
-						--SkuOptions.db.profile["SkuNav"].SkuNavMMMainWidth = self:GetParent():GetWidth()
-						--SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainHeight = self:GetParent():GetHeight()
+						SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX = _G["SkuNavMMMainFrame"]:GetLeft()
+						SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY = _G["SkuNavMMMainFrame"]:GetBottom()
 					end
 				end
 			end)
 			rb:SetScript("OnMouseDown", function(self, button)
 				if button == "LeftButton" then
-					if SkuOptions.db.profile["SkuNav"].showPolyControls == true then
+					if SkuOptions.db.profile["SkuNav"].showAdvancedControls > 1 then
 						_G["SkuNavMMMainEditBoxEditBox"]:ClearFocus()
 					end
 					self:GetParent():StartSizing("BOTTOMRIGHT")
@@ -791,18 +845,24 @@ function SkuNav:SkuNavMMOpen()
 			rb:SetScript("OnMouseUp", function(self, button)
 				self:GetParent():StopMovingOrSizing()
 				self:GetHighlightTexture():Show()
-				_G["SkuNavMMMainFrameScrollFrame"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+				_G["SkuNavMMMainFrameScrollFrame"]:SetWidth(self:GetParent():GetWidth()  - 10)
 				_G["SkuNavMMMainFrameScrollFrame"]:SetHeight(self:GetParent():GetHeight() - 10)
-				_G["SkuNavMMMainFrameScrollFrame1"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+				_G["SkuNavMMMainFrameScrollFrame1"]:SetWidth(self:GetParent():GetWidth()  - 10)
 				_G["SkuNavMMMainFrameScrollFrame1"]:SetHeight(self:GetParent():GetHeight() - 10)
 
-				_G["SkuNavMMMainFrameScrollFrameContent"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+				_G["SkuNavMMMainFrameScrollFrameContent"]:SetWidth(self:GetParent():GetWidth()  - 10)
 				_G["SkuNavMMMainFrameScrollFrameContent"]:SetHeight(self:GetParent():GetHeight() - 10)
-				_G["SkuNavMMMainFrameScrollFrameContent1"]:SetWidth(self:GetParent():GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
+				_G["SkuNavMMMainFrameScrollFrameContent1"]:SetWidth(self:GetParent():GetWidth()  - 10)
 				_G["SkuNavMMMainFrameScrollFrameContent1"]:SetHeight(self:GetParent():GetHeight() - 10)
 		
 				SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainWidth = self:GetParent():GetWidth()
 				SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainHeight = self:GetParent():GetHeight()
+
+				SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX = _G["SkuNavMMMainFrame"]:GetLeft()
+				SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY = _G["SkuNavMMMainFrame"]:GetBottom()
+
+				_G["SkuNavMMMainFrame"]:ClearAllPoints()
+				_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX, SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY)
 
 				tRbIsDrag = false
 			end)
@@ -819,22 +879,22 @@ function SkuNav:SkuNavMMOpen()
 				if _G["SkuNavMMMainFrameOptionsParent"]:IsShown() then
 					_G["SkuNavMMMainFrameOptionsParent"]:SetWidth(0)
 					_G["SkuNavMMMainFrameOptionsParent"]:Hide()
-					_G["SkuNavMMMainFrame"]:ClearAllPoints()
-					_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", (_G["SkuNavMMMainFrame"]:GetLeft() + 300 ), (_G["SkuNavMMMainFrame"]:GetBottom()))
-					_G["SkuNavMMMainFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() - 300)
+					--_G["SkuNavMMMainFrame"]:ClearAllPoints()
+					--_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", (_G["SkuNavMMMainFrame"]:GetLeft() + 300 ), (_G["SkuNavMMMainFrame"]:GetBottom()))
+					--_G["SkuNavMMMainFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() - 300)
 
-					_G["SkuNavMMMainFrameScrollFrame"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
-					_G["SkuNavMMMainFrameScrollFrame1"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
+					--_G["SkuNavMMMainFrameScrollFrame"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
+					--_G["SkuNavMMMainFrameScrollFrame1"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
 					SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsed = true
 		
 				else
 					_G["SkuNavMMMainFrameOptionsParent"]:Show()
 					_G["SkuNavMMMainFrameOptionsParent"]:SetWidth(300)
-					_G["SkuNavMMMainFrame"]:ClearAllPoints()
-					_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", (_G["SkuNavMMMainFrame"]:GetLeft() - 300 ), (_G["SkuNavMMMainFrame"]:GetBottom()))
-					_G["SkuNavMMMainFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() + 300)
-					_G["SkuNavMMMainFrameScrollFrame"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
-					_G["SkuNavMMMainFrameScrollFrame1"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
+					--_G["SkuNavMMMainFrame"]:ClearAllPoints()
+					--_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", (_G["SkuNavMMMainFrame"]:GetLeft() - 300 ), (_G["SkuNavMMMainFrame"]:GetBottom()))
+					--_G["SkuNavMMMainFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() + 300)
+					--_G["SkuNavMMMainFrameScrollFrame"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
+					--_G["SkuNavMMMainFrameScrollFrame1"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
 					SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsed = false
 				end
 			end)
@@ -845,80 +905,43 @@ function SkuNav:SkuNavMMOpen()
 
 			local tMain = _G["SkuNavMMMainFrame"]
 			--map texture parent frame
-			local f1 = CreateFrame("Frame", "SkuNavMMMainFrameOptionsParent", tMain, BackdropTemplateMixin and "BackdropTemplate" or nil)
-			f1:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background", edgeFile="", tile = false, tileSize = 0, edgeSize = 32, insets = { left = 5, right = 5, top = 5, bottom = 5 }})
-			f1:SetBackdropColor(1, 1, 1, 1)
+			local f1 = CreateFrame("Frame", "SkuNavMMMainFrameOptionsParent", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+			f1:SetBackdrop({bgFile="Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\white.tga", edgeFile="", tile = false, tileSize = 0, edgeSize = 32, insets = { left = -1, right = 3, top = 0, bottom = -3 }})
+			f1:SetBackdropColor(0.5, 0.5, 0.5, 1)
 			f1:SetWidth(300)  
-			f1:SetHeight(200) 
-			f1:SetPoint("TOPLEFT", tMain, "TOPLEFT", 0, 0)
-			f1:EnableMouse(false)
+			f1:SetHeight(300) 
+			f1:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosX, (SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosY))
+			f1:EnableMouse(true)
+			f1:SetScript("OnDragStart", function(self) self:StartMoving() end)
+			f1:SetScript("OnDragStop", function(self)
+				self:StopMovingOrSizing()
+				SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosX = _G["SkuNavMMMainFrameOptionsParent"]:GetLeft()
+				SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosY = _G["SkuNavMMMainFrameOptionsParent"]:GetBottom()
+				_G["SkuNavMMMainFrameOptionsParent"]:ClearAllPoints()
+				_G["SkuNavMMMainFrameOptionsParent"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosX, SkuOptions.db.profile[MODULE_NAME].SkuNavMMOptionsPosY)
+			end)
+			f1:SetScript("OnShow", function(self)
+			end)			
+			f1:SetMovable(true)
+			f1:SetClampedToScreen(true)
+			f1:RegisterForDrag("LeftButton")
 			f1:Show()
 
+			if SkuOptions.db.profile["SkuNav"].showAdvancedControls > 1 then
+				f1:SetHeight(380) 
+			end
+			if SkuOptions.db.profile["SkuNav"].showAdvancedControls > 2 then
+				f1:SetHeight(550) 
+			end
+
 			local tOptionsParent = _G["SkuNavMMMainFrameOptionsParent"]
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameFollow", tOptionsParent, "Follow", 100, 20, "TOPLEFT", tOptionsParent, "TOPLEFT", 3, -3)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameFollow", tOptionsParent, "Follow", 100, 20, "TOPLEFT", tOptionsParent, "TOPLEFT", 3, -3)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)
 				SkuMapperFocusOnPlayer = true
 			end)
 
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameWorldStart", tOptionsParent, "World Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 0, -100)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(1, 1)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameFlyStart", tOptionsParent, "Fly Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameWorldStart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(2, 1)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameFactionAStart", tOptionsParent, "Alli Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFlyStart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(3, 1)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameFactionHStart", tOptionsParent, "Horde Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionAStart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(3, 2)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameFactionAldorStart", tOptionsParent, "Aldor Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionHStart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(3, 3)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameFactionScryerStart", tOptionsParent, "Scryer Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionAldorStart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(3, 4)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameOthertart", tOptionsParent, "Other Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionScryerStart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				StartPolyRecording(4, 1)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameEnd", tOptionsParent, "End", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameOthertart"], "TOPLEFT", 0, -20)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				if SkuNavRecordingPoly > 0 then
-					if #SkuDB.Polygons.data[SkuNavRecordingPolyFor].nodes > 0 then
-						print("recording completed > saved", SkuDB.Polygons.eTypes[SkuNavRecordingPoly][2][SkuNavRecordingPolySub][1], "ds:", SkuNavRecordingPolyFor)
-					else
-						print("recording completed, but no nodes > wasted", SkuDB.Polygons.eTypes[SkuNavRecordingPoly][2][SkuNavRecordingPolySub][1], "ds:", SkuNavRecordingPolyFor)
-					end
-					SkuNavRecordingPoly = 0
-					SkuNavRecordingPolySub = 0
-					SkuNavRecordingPolyFor = nil
-				else
-					print("no recording in process: ")--, SkuDB.Polygons.eTypes[SkuNavRecordingPoly][2][SkuNavRecordingPolySub][1])
-				end
-			end)
 
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameWrite", tOptionsParent, "Write", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 100, -100)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				local tStr = tostring(SkuDB.Polygons.data)
-				_G["SkuNavMMMainEditBoxEditBox"]:SetText(tStr)
-			end)
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameRead", tOptionsParent, "Read", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameWrite"], "TOPLEFT", 95, 0)
-			tButtonObj:SetScript("OnMouseUp", function(self, button)
-				local tStr = tostring(SkuDB.Polygons.data)
-				local f = assert(loadstring("return {".._G["SkuNavMMMainEditBoxEditBox"]:GetText().."}"), "invalid")
-				SkuDB.Polygons.data = f()
-				setmetatable(SkuDB.Polygons.data, SkuPrintMT)
-				_G["SkuNavMMMainEditBoxEditBox"]:ClearFocus()
-			end)
-
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameShowFilter", tOptionsParent, "Filter", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 100, 0)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowFilter", tOptionsParent, "Filter", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 100, 0)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)
 				self.selected  = self.selected  ~= true
 				SkuQuest.QuestWpCache = {}
@@ -931,7 +954,7 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			_G["SkuNavMMMainFrameShowFilter"].selectedDefault = false
 
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestStartWps", tOptionsParent, "Starts", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 100, -20)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestStartWps", tOptionsParent, "Starts", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 100, -20)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)
 				self.selected  = self.selected  ~= true
 				SkuQuest.QuestWpCache = {}
@@ -944,7 +967,7 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			_G["SkuNavMMMainFrameShowQuestStartWps"].selectedDefault = true
 
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestObjectiveWps", tOptionsParent, "Objectives", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameShowQuestStartWps"], "TOPLEFT", 95, 0)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestObjectiveWps", tOptionsParent, "Objectives", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameShowQuestStartWps"], "TOPLEFT", 95, 0)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)
 				self.selected  = self.selected  ~= true
 				SkuQuest.QuestWpCache = {}
@@ -957,7 +980,7 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			_G["SkuNavMMMainFrameShowQuestObjectiveWps"].selectedDefault = true
 
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestFinishWps", tOptionsParent, "Finish", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameShowQuestStartWps"], "TOPLEFT", 0, -20)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestFinishWps", tOptionsParent, "Finish", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameShowQuestStartWps"], "TOPLEFT", 0, -20)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)
 				self.selected  = self.selected  ~= true
 				SkuQuest.QuestWpCache = {}
@@ -970,7 +993,7 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			_G["SkuNavMMMainFrameShowQuestFinishWps"].selectedDefault = true
 
-			local tButtonObj = CreateButtonFrameTemplate("SkuNavMMMainFrameShowLimitWps", tOptionsParent, "Limit", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameShowQuestFinishWps"], "TOPLEFT", 95, 0)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowLimitWps", tOptionsParent, "Limit", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameShowQuestFinishWps"], "TOPLEFT", 95, 0)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)
 				self.selected  = self.selected  ~= true
 				SkuQuest.QuestWpCache = {}
@@ -983,7 +1006,13 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			_G["SkuNavMMMainFrameShowLimitWps"].selectedDefault = false
 
-			local tDropdownFrame = CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelect", tOptionsParent, "Zone", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 195, 0)
+			local tDropdownFrame = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelect", tOptionsParent, "Zone", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 195, 0)
+			local tex = tDropdownFrame:CreateTexture(nil, "OVERLAY")
+			tex:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\ui_dropdown.tga")
+			tex:SetSize(20, 20)
+			tex:SetPoint("TOPRIGHT", tDropdownFrame, "TOPRIGHT", 0, 0)
+
+
 			tDropdownFrame.MenuButtonsObjects = {}
 			tDropdownFrame.value = -1
 			tDropdownFrame:SetText("Current Zone") 
@@ -1043,7 +1072,7 @@ function SkuNav:SkuNavMMOpen()
 				--for x = 1, #tMenuItems do
 				self.maxCurrentItems = #tMenuItems
 				for x = 1, self.maxVisibleItems do
-					self.MenuButtonsObjects[x] = _G["SkuNavMMMainFrameZoneSelectEntry"..x] or CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelectEntry"..x, self, "button"..x, 95, 20, "TOPLEFT", self, "TOPLEFT", 25, -(x * 16))
+					self.MenuButtonsObjects[x] = _G["SkuNavMMMainFrameZoneSelectEntry"..x] or SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelectEntry"..x, self, "button"..x, 95, 20, "TOPLEFT", self, "TOPLEFT", 25, -(x * 16))
 					self.MenuButtonsObjects[x]:SetScript("OnMouseDown", function(self, button)
 						self:GetParent().value = self.value
 						self:GetParent():SetText(tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem].buttonText) 
@@ -1099,125 +1128,7 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			_G["SkuNavMMMainFrameZoneSelect"].selectedDefault = false
 
-			--level dd
-			--[[
-			local tDropdownFrame = CreateButtonFrameTemplate("SkuNavMMMainFrameLevelSelect", tOptionsParent, "Level", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 0, -20)
-			tDropdownFrame.MenuButtonsObjects = {}
-			tDropdownFrame.value = -100
-			tDropdownFrame:SetText("No Level") 
-			tDropdownFrame:SetScript("OnEnter", function(self)
-				GameTooltip:ClearLines()
-				GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-				GameTooltip:AddLine(self.Text:GetText(), 1, 1, 1)
-				--GameTooltip:AddLine("zone id: "..(self.value or ""), 1, 1, 1)
-				GameTooltip:Show()
-			end)
-			tDropdownFrame:SetScript("OnLeave", function(self)
-				GameTooltip:Hide()
-			end)
-			tDropdownFrame.maxVisibleItems = 11
-			tDropdownFrame.maxCurrentItems = 0
-			tDropdownFrame.firstVisibleItem = 1
-			tDropdownFrame.UpdateList = function(self, a, b)
-				local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
-				local tMenuItems = {}
 
-				for x = -6, -1, 1 do
-					tMenuItems[#tMenuItems + 1] = {zoneId = x, buttonText = "Level "..x,}
-				end
-				tMenuItems[#tMenuItems + 1] = {zoneId = -100, buttonText = "No Level",}
-				for x = 0, 8, 1 do
-					tMenuItems[#tMenuItems + 1] = {zoneId = x, buttonText = "Level "..x,}
-				end
-
-				self.maxCurrentItems = #tMenuItems
-				for x = 1, self.maxVisibleItems do
-					self.MenuButtonsObjects[x]:SetText(tMenuItems[x + self.firstVisibleItem].buttonText)
-					self.MenuButtonsObjects[x].value = tMenuItems[x + self.firstVisibleItem].zoneId
-				end
-			end
-
-			tDropdownFrame:SetScript("OnMouseUp", function(self, button)
-				self.selected  = self.selected  ~= true
-				local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
-				local tMenuItems = {}
-				local tMenuItemsMaxLen = 0
-
-				for x = -6, -1, 1 do
-					tMenuItems[#tMenuItems + 1] = {zoneId = x, buttonText = "Level "..x,}
-					if string.len(tMenuItems[#tMenuItems].buttonText) > tMenuItemsMaxLen then
-						tMenuItemsMaxLen = string.len(tMenuItems[#tMenuItems].buttonText)
-					end
-				end
-				tMenuItems[#tMenuItems + 1] = {zoneId = -100, buttonText = "No Level",}
-				if string.len(tMenuItems[#tMenuItems].buttonText) > tMenuItemsMaxLen then
-					tMenuItemsMaxLen = string.len(tMenuItems[#tMenuItems].buttonText)
-				end
-				for x = 0, 8, 1 do
-					tMenuItems[#tMenuItems + 1] = {zoneId = x, buttonText = "Level "..x,}
-					if string.len(tMenuItems[#tMenuItems].buttonText) > tMenuItemsMaxLen then
-						tMenuItemsMaxLen = string.len(tMenuItems[#tMenuItems].buttonText)
-					end
-				end
-
-				self.maxCurrentItems = #tMenuItems
-				for x = 1, self.maxVisibleItems do
-					self.MenuButtonsObjects[x] = _G["SkuNavMMMainFrameLevelSelectEntry"..x] or CreateButtonFrameTemplate("SkuNavMMMainFrameLevelSelectEntry"..x, self, "button"..x, 95, 20, "TOPLEFT", self, "TOPLEFT", 25, -(x * 16))
-					self.MenuButtonsObjects[x]:SetScript("OnMouseDown", function(self, button)
-						self:GetParent().value = self.value
-						self:GetParent():SetText(tMenuItems[x + _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem].buttonText) 
-						for z = 1, #self:GetParent().MenuButtonsObjects do
-							self:GetParent().MenuButtonsObjects[z]:Hide()
-						end
-					end)
-					self.MenuButtonsObjects[x]:SetFrameStrata("FULLSCREEN_DIALOG")						
-					self.MenuButtonsObjects[x]:SetWidth(tMenuItemsMaxLen * 8)						
-					self.MenuButtonsObjects[x]:SetText(tMenuItems[x + _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem].buttonText)
-					self.MenuButtonsObjects[x].value = tMenuItems[x + _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem].zoneId
-					if self.selected == true then
-						self.MenuButtonsObjects[x]:Show()
-					else
-						self.MenuButtonsObjects[x]:Hide()
-					end
-				end
-				for x = self.maxVisibleItems + 1, #self.MenuButtonsObjects do
-					self.MenuButtonsObjects[x]:Hide()
-				end
-				self.ItemsBackdropFrame = self.ItemsBackdropFrame or CreateFrame("Frame",nil, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-				self.ItemsBackdropFrame:SetFrameStrata("TOOLTIP")						
-				self.ItemsBackdropFrame:SetWidth(tMenuItemsMaxLen * 8 + 10)
-				--self.ItemsBackdropFrame:SetHeight(500)--20 * #tMenuItems + 10)
-				self.ItemsBackdropFrame:SetHeight(20 * self.maxVisibleItems + 10)
-				self.ItemsBackdropFrame:SetPoint("TOPLEFT", self.MenuButtonsObjects[1], "TOPLEFT", 0, 0)
-				--self.ItemsBackdropFrame:SetPoint("BOTTOMRIGHT", self.MenuButtonsObjects[#tMenuItems], "BOTTOMRIGHT", 0, 0)
-				self.ItemsBackdropFrame:SetPoint("BOTTOMRIGHT", self.MenuButtonsObjects[self.maxVisibleItems], "BOTTOMRIGHT", 0, 0)
-				self.ItemsBackdropFrame:EnableMouse(false)
-				self.ItemsBackdropFrame:SetScript("OnMouseWheel", function(self, aDelta)
-					if aDelta > 0 then
-						if _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem > 1 then
-							_G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem = _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem - 1
-						end
-					else
-						if _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem < _G["SkuNavMMMainFrameLevelSelect"].maxCurrentItems - _G["SkuNavMMMainFrameLevelSelect"].maxVisibleItems then
-							_G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem = _G["SkuNavMMMainFrameLevelSelect"].firstVisibleItem + 1
-						end
-					end
-					_G["SkuNavMMMainFrameLevelSelect"]:UpdateList()
-				end)
-				self.ItemsBackdropFrame:SetScript("OnLeave", function(self)
-					if self:IsVisible() == true then
-						_G["SkuNavMMMainFrameLevelSelect"]:GetScript("OnMouseUp")(_G["SkuNavMMMainFrameLevelSelect"], "LeftButton")
-					end
-				end)
-				self.ItemsBackdropFrame:SetMouseClickEnabled(false)
-					if self.selected == true then
-					self.ItemsBackdropFrame:Show()
-				else
-					self.ItemsBackdropFrame:Hide()
-				end
-			end)
-			_G["SkuNavMMMainFrameLevelSelect"].selectedDefault = false
-			]]
 			--init
 			_G["SkuNavMMMainFrameShowFilter"].selected = _G["SkuNavMMMainFrameShowFilter"].selectedDefault
 			_G["SkuNavMMMainFrameShowQuestStartWps"].selected = _G["SkuNavMMMainFrameShowQuestStartWps"].selectedDefault
@@ -1235,13 +1146,511 @@ function SkuNav:SkuNavMMOpen()
 				end
 			end			
 
+
+
+			-- filter EditBox
+			local f = CreateFrame("Frame", "SkuNavMMMainFrameFilterEditBox", tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
+			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 2, -60)
+			f:SetSize(286, 17)
+			f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+			f:SetBackdropColor(0.5, 0.5, 0.5, 1)
+			f:Show()
+			local fs = SkuNavMMMainFrameFilterEditBox:CreateFontString("SkuNavMMMainFrameFilterEditBoxLabel")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", SkuNavMMMainFrameFilterEditBox, "TOPLEFT", 0, 12)
+			fs:SetText(L["Filter"])
+			fs:Show()			
+			local eb = CreateFrame("EditBox", "SkuNavMMMainFrameFilterEditBoxEditBox", _G["SkuNavMMMainFrameFilterEditBox"])
+			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+			eb:SetSize(f:GetSize())
+			eb:SetMultiLine(false)
+			eb:SetAutoFocus(false)
+			eb:SetFontObject("ChatFontSmall")
+			eb:SetScript("OnEscapePressed", function(self) 
+				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+			eb:SetScript("OnEnterPressed", function(self) 
+				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+
+
+			-- suffix EditBoxes
+			
+			---------------- AutoEn
+			local tEnSuffixY = -33
+			local tDeSuffixY = -33
+			if SkuOptions.db.profile["SkuNav"].showAdvancedControls > 1 then
+				tDeSuffixY = -105
+			elseif Sku.Loc == "enUS" then
+				tDeSuffixY = -33
+			end
+
+			local tName = "SkuNavMMMainFrameSuffixAutoenUSEditBox"
+			local f = CreateFrame("Frame", tName, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
+			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameFilterEditBox"], "TOPLEFT", 0, -35)
+			f:SetSize(286, 17)
+			f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "", edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+			f:SetBackdropColor(0.5, 0.5, 0.5, 1)
+			f:Show()
+			local fs = _G[tName]:CreateFontString(tName.."Label")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", _G[tName], "TOPLEFT", 0, 12)
+			fs:SetText("EN name for new auto waypoints (+ number)")
+			fs:Show()			
+			local eb = CreateFrame("EditBox", tName.."EditBox", _G[tName])
+			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+			eb:SetSize(f:GetSize())
+			eb:SetMultiLine(false)
+			eb:SetAutoFocus(false)
+			eb:SetFontObject("ChatFontSmall")
+			eb:SetScript("OnEscapePressed", function(self) 
+				SkuNav:UpdateAutoPrefixes()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+			eb:SetScript("OnEnterPressed", function(self) 
+				SkuNav:UpdateAutoPrefixes()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+			eb:Disable()
+			-- CustomEn
+			local tName = "SkuNavMMMainFrameSuffixCustomenUSEditBox"
+			local f = CreateFrame("Frame", tName, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
+			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameSuffixAutoenUSEditBox"], "TOPLEFT", 0, -33)
+			f:SetSize(236, 20)
+			f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+			f:SetBackdropColor(0.5, 0.5, 0.5, 1)
+			f:Show()
+			local fs = _G[tName]:CreateFontString(tName.."Label")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", _G[tName], "TOPLEFT", 0, 12)
+			fs:SetText("EN custom prefix")
+			fs:Show()			
+			local eb = CreateFrame("EditBox", tName.."EditBox", _G[tName])
+			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+			eb:SetSize(f:GetSize())
+			eb:SetMultiLine(false)
+			eb:SetAutoFocus(false)
+			eb:SetFontObject("ChatFontSmall")
+			local function tSkuNavMMMainFrameSuffixCustomenUSEditBoxUpdateHelper(self)
+				if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+					_G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:SetText(self:GetText())
+				end
+				SkuNav:UpdateAutoPrefixes()
+				self:ClearFocus()
+				PlaySound(89)
+			end
+			eb:SetScript("OnEditFocusLost", function(self) 
+				tSkuNavMMMainFrameSuffixCustomenUSEditBoxUpdateHelper(self)
+			end)
+			eb:SetScript("OnEscapePressed", function(self) 
+				tSkuNavMMMainFrameSuffixCustomenUSEditBoxUpdateHelper(self)
+			end)
+			eb:SetScript("OnEnterPressed", function(self) 
+				tSkuNavMMMainFrameSuffixCustomenUSEditBoxUpdateHelper(self)
+			end)
+
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameSuffixCustomenUSClear", tOptionsParent, "Clear", 50, 24, "TOPLEFT", _G["SkuNavMMMainFrameSuffixCustomenUSEditBox"], "TOPRIGHT", 1, 2)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				_G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:SetText("")
+				if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+					_G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:SetText("")
+				end
+				SkuNav:UpdateAutoPrefixes()
+				PlaySound(89)
+			end)
+
+
+
+			------------------- AutoDE
+			local tName = "SkuNavMMMainFrameSuffixAutodeDEEditBox"
+			local f = CreateFrame("Frame", tName, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
+			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameFilterEditBox"], "TOPLEFT", 0, tDeSuffixY)
+			f:SetSize(286, 17)
+			f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "", edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+			f:SetBackdropColor(0.5, 0.5, 0.5, 1)
+			f:Show()
+			local fs = _G[tName]:CreateFontString(tName.."Label")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", _G[tName], "TOPLEFT", 0, 12)
+			fs:SetText("DE name for new auto waypoints (+ number)")
+			fs:Show()			
+			local eb = CreateFrame("EditBox", tName.."EditBox", _G[tName])
+			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+			eb:SetSize(f:GetSize())
+			eb:SetMultiLine(false)
+			eb:SetAutoFocus(false)
+			eb:SetFontObject("ChatFontSmall")
+			eb:SetScript("OnEscapePressed", function(self) 
+				SkuNav:UpdateAutoPrefixes()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+			eb:SetScript("OnEnterPressed", function(self) 
+				SkuNav:UpdateAutoPrefixes()
+				self:ClearFocus()
+				PlaySound(89)
+			end)
+			-- CustomDE
+			local tName = "SkuNavMMMainFrameSuffixCustomdeDEEditBox"
+			local f = CreateFrame("Frame", tName, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
+			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameSuffixAutodeDEEditBox"], "TOPLEFT", 0, -33)
+			f:SetSize(236, 20)
+			f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+			f:SetBackdropColor(0.5, 0.5, 0.5, 1)
+			f:Show()
+			local fs = _G[tName]:CreateFontString(tName.."Label")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", _G[tName], "TOPLEFT", 0, 12)
+			fs:SetText("DE custom prefix")
+			fs:Show()			
+			local eb = CreateFrame("EditBox", tName.."EditBox", _G[tName])
+			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
+			eb:SetSize(f:GetSize())
+			eb:SetMultiLine(false)
+			eb:SetAutoFocus(false)
+			eb:SetFontObject("ChatFontSmall")
+			local function tSkuNavMMMainFrameSuffixCustomenUSEditBoxEditBoxUpdateHelper(self)
+				if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+					_G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:SetText(self:GetText())
+				end
+				SkuNav:UpdateAutoPrefixes()
+				self:ClearFocus()
+				PlaySound(89)
+			end
+			eb:SetScript("OnEditFocusLost", function(self) 
+				tSkuNavMMMainFrameSuffixCustomenUSEditBoxEditBoxUpdateHelper(self)
+			end)
+			eb:SetScript("OnEscapePressed", function(self) 
+				tSkuNavMMMainFrameSuffixCustomenUSEditBoxEditBoxUpdateHelper(self)
+			end)
+			eb:SetScript("OnEnterPressed", function(self) 
+				tSkuNavMMMainFrameSuffixCustomenUSEditBoxEditBoxUpdateHelper(self)
+			end)
+
+
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameSuffixCustomdeDEClear", tOptionsParent, "Clear", 50, 24, "TOPLEFT", _G["SkuNavMMMainFrameSuffixCustomdeDEEditBox"], "TOPRIGHT", 1, 2)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+					_G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:SetText("")
+				end
+				_G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:SetText("")
+				SkuNav:UpdateAutoPrefixes()
+				PlaySound(89)
+			end)
+
+
+			--auto update controls
+
+				------
+				--mode button
+				local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameEditMode2", tOptionsParent, (SkuNav.tWpEditMode == 1 and "Selection mode: mouse over" or "Mode: start / end"), 185, 20, "TOPLEFT", _G["SkuNavMMMainFrameSuffixCustomdeDEEditBox"], "BOTTOMLEFT", -1, -17)
+				local tex = tButtonObj:CreateTexture(nil, "OVERLAY")
+				tex:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\ui_toggle.tga")
+				tex:SetSize(20, 20)
+				tex:SetPoint("TOPRIGHT", tButtonObj, "TOPRIGHT", 0, 0)
+				tButtonObj:SetScript("OnMouseUp", function(self, button)
+					if SkuNav.tWpEditMode ~= 2 then
+						SkuNav.tWpEditMode = 2
+						self:SetText("Selection mode: start / end")
+					else
+						SkuNav.tWpEditMode = 1
+						self:SetText("Selection mode: mouse over")
+					end
+					if SkuNav.tWpEditMode == 1 then
+						_G["SkuNavMMMainFrameMouseSize"]:Show()
+						_G["SkuNavMMMainFrameTrackSize"]:Hide()
+					else
+						_G["SkuNavMMMainFrameMouseSize"]:Hide()
+						_G["SkuNavMMMainFrameTrackSize"]:Show()
+					end
+
+					PlaySound(89)
+				end)
+	
+				local fs = _G["SkuNavMMMainFrameEditMode2"]:CreateFontString("SkuNavMMMainFrameEditMode2Label")--, "HIGHLIGHT", "GameTooltipText")
+				fs:SetTextHeight(12)
+				fs:SetFontObject("ChatFontSmall")
+				fs:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameEditMode2"], "TOPLEFT", 1, 12)
+				fs:SetText("Selecting existing waypoints for manipulation")
+				fs:Show()			
+	
+
+				--SkuNav.tCoverSize
+				local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameMouseSize", tOptionsParent, "Cursor size: "..SkuNav.tCoverSize, 104, 20, "TOPLEFT", _G["SkuNavMMMainFrameEditMode2"], "TOPRIGHT", 0, 0)
+				local tex = tButtonObj:CreateTexture(nil, "OVERLAY")
+				tex:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\ui_updown.tga")
+				tex:SetSize(20, 20)
+				tex:SetPoint("TOPRIGHT", tButtonObj, "TOPRIGHT", 0, 0)
+				tButtonObj:SetScript("OnMouseDown", function(self, button)
+					if button == "LeftButton" then
+						SkuNav.tCoverSize = SkuNav.tCoverSize + 1
+					else
+						SkuNav.tCoverSize = SkuNav.tCoverSize - 1
+					end
+					if SkuNav.tCoverSize < 3 then
+						SkuNav.tCoverSize = 0
+					end
+					if SkuNav.tCoverSize > 100 then
+						SkuNav.tCoverSize = 100
+					end
+					self:SetText("Cursor size: "..SkuNav.tCoverSize)
+				end)
+				tButtonObj:SetScript("OnMouseWheel", function(self, delta)
+					SkuNav.tCoverSize = SkuNav.tCoverSize + delta
+					if SkuNav.tCoverSize < 3 then
+						SkuNav.tCoverSize = 0
+					end
+					if SkuNav.tCoverSize > 100 then
+						SkuNav.tCoverSize = 100
+					end
+					self:SetText("Cursor size: "..SkuNav.tCoverSize)
+
+					PlaySound(89)
+				end)
+				--SkuNav.TrackSize
+				local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameTrackSize", tOptionsParent, "Steps: "..SkuNav.TrackSize, 104, 20, "TOPLEFT", _G["SkuNavMMMainFrameEditMode2"], "TOPRIGHT", 0, 0)
+				local tex = tButtonObj:CreateTexture(nil, "OVERLAY")
+				tex:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\ui_updown.tga")
+				tex:SetSize(20, 20)
+				tex:SetPoint("TOPRIGHT", tButtonObj, "TOPRIGHT", 0, 0)
+				tButtonObj:SetScript("OnMouseDown", function(self, button)
+					if button == "LeftButton" then
+						SkuNav.TrackSize = SkuNav.TrackSize + 1
+					else
+						SkuNav.TrackSize = SkuNav.TrackSize - 1
+					end
+					if SkuNav.TrackSize < 1 then
+						SkuNav.TrackSize = 1
+					end
+					if SkuNav.TrackSize > 100 then
+						SkuNav.TrackSize = 100
+					end
+					self:SetText("Steps: "..SkuNav.TrackSize)
+					C_Timer.After(0.2, function()
+						SkuNav:RebuildTracks()
+					end)
+
+				end)				
+				tButtonObj:SetScript("OnMouseWheel", function(self, delta)
+					if IsAltKeyDown() == true then
+						delta = delta * 10
+					end
+					SkuNav.TrackSize = SkuNav.TrackSize + delta
+					
+					if SkuNav.TrackSize < 1 then
+						SkuNav.TrackSize = 1
+					end
+					if SkuNav.TrackSize > 100 then
+						SkuNav.TrackSize = 100
+					end
+					self:SetText("Steps: "..SkuNav.TrackSize)
+					C_Timer.After(0.2, function()
+						SkuNav:RebuildTracks()
+						PlaySound(89)
+					end)
+				end)
+
+				if SkuNav.tWpEditMode == 1 then
+					_G["SkuNavMMMainFrameMouseSize"]:Show()
+					_G["SkuNavMMMainFrameTrackSize"]:Hide()
+				else
+					_G["SkuNavMMMainFrameMouseSize"]:Hide()
+					_G["SkuNavMMMainFrameTrackSize"]:Show()
+				end
+
+				local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameClearSE", tOptionsParent, "Clear selected waypoints", 289, 20, "TOPLEFT", _G["SkuNavMMMainFrameEditMode2"], "BOTTOMLEFT", 0, 0)
+				tButtonObj:SetScript("OnMouseUp", function(self, button)
+					local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
+
+					SkuNav.Tracks = {
+						startid = nil,
+						endids = {},
+					}
+					for x = 1, #WaypointCache do
+						if WaypointCacheLookupPerContintent[tcontintentId][x] then
+							WaypointCache[x].tackStart = nil
+							WaypointCache[x].tackStep = nil
+							WaypointCache[x].tackend = nil
+						end
+					end					
+					SkuNav:RebuildTracks()
+	
+					PlaySound(89)
+				end)
+	
+
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameUpdateTracked", tOptionsParent, "Add custom prefix to all selected auto", 289, 20, "TOPLEFT", _G["SkuNavMMMainFrameClearSE"], "BOTTOMLEFT", 0, -17)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				SkuNav:UpdateTracksNames()
+				PlaySound(89)
+			end)
+
+			local fs = _G["SkuNavMMMainFrameUpdateTracked"]:CreateFontString("SkuNavMMMainFrameUpdateTrackedLabel")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameUpdateTracked"], "TOPLEFT", 1, 12)
+			fs:SetText("Manipulate only selected 'auto' waypoints (custom)")
+			fs:Show()	
+
+
+			--SkuNav.TrackedLevel
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameTrackLevel", tOptionsParent, "New Layer: "..SkuNav.TrackedLevels[SkuNav.TrackedLevel], 144, 20, "TOPLEFT", _G["SkuNavMMMainFrameUpdateTracked"], "BOTTOMLEFT", 0, -17)
+			local tex = tButtonObj:CreateTexture(nil, "OVERLAY")
+			tex:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\ui_updown.tga")
+			tex:SetSize(20, 20)
+			tex:SetPoint("TOPRIGHT", tButtonObj, "TOPRIGHT", 0, 0)
+			tButtonObj:SetScript("OnMouseDown", function(self, button)
+				if button == "LeftButton" then
+					SkuNav.TrackedLevel = SkuNav.TrackedLevel + 1
+				else
+					SkuNav.TrackedLevel = SkuNav.TrackedLevel - 1
+				end
+				if SkuNav.TrackedLevel < -10 then
+					SkuNav.TrackedLevel = -10
+				end
+				if SkuNav.TrackedLevel > 10 then
+					SkuNav.TrackedLevel = 10
+				end
+				self:SetText("New Layer: "..SkuNav.TrackedLevels[SkuNav.TrackedLevel])
+				self.Text:SetTextColor(1, 1, 1, 1)
+				if SkuNav.TrackedLevel < -1 then
+					self.Text:SetTextColor(1, 0.33, 0.33, 1)
+				elseif SkuNav.TrackedLevel > -1 then
+					self.Text:SetTextColor(0, 1, 0, 1)
+				end
+
+				C_Timer.After(0.2, function()
+					SkuNav:RebuildTracks()
+				end)
+			end)						
+			tButtonObj:SetScript("OnMouseWheel", function(self, delta)
+				if IsAltKeyDown() == true then
+					delta = delta * 10
+				end
+				SkuNav.TrackedLevel = SkuNav.TrackedLevel + delta
+				
+				if SkuNav.TrackedLevel < -10 then
+					SkuNav.TrackedLevel = -10
+				end
+				if SkuNav.TrackedLevel > 10 then
+					SkuNav.TrackedLevel = 10
+				end
+				self:SetText("New Layer: "..SkuNav.TrackedLevels[SkuNav.TrackedLevel])
+				self.Text:SetTextColor(1, 1, 1, 1)
+				if SkuNav.TrackedLevel < -1 then
+					self.Text:SetTextColor(1, 0.33, 0.33, 1)
+				elseif SkuNav.TrackedLevel > -1 then
+					self.Text:SetTextColor(0, 1, 0, 1)
+				end
+
+				C_Timer.After(0.2, function()
+					SkuNav:RebuildTracks()
+					PlaySound(89)
+				end)
+			end)
+
+			local fs = _G["SkuNavMMMainFrameTrackLevel"]:CreateFontString("SkuNavMMMainFrameTrackLevelLabel")--, "HIGHLIGHT", "GameTooltipText")
+			fs:SetTextHeight(12)
+			fs:SetFontObject("ChatFontSmall")
+			fs:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameTrackLevel"], "TOPLEFT", 1, 12)
+			fs:SetText("Manipulate all selected waypoints (custom, creature, object)")
+			fs:Show()	
+
+
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameUpdateNonAuto", tOptionsParent, "Assign new layer to all selected waypoints", 289, 20, "TOPLEFT", _G["SkuNavMMMainFrameTrackLevel"], "BOTTOMLEFT", 0, 0)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				SkuNav:UpdateTracksNonAutoLevel()
+				PlaySound(89)
+			end)
+
+
+
+			--poly
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameWorldStart", tOptionsParent, "World Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameUpdateNonAuto"], "BOTTOMLEFT", 0, -10)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(1, 1)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameFlyStart", tOptionsParent, "Fly Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameWorldStart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(2, 1)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameFactionAStart", tOptionsParent, "Alli Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFlyStart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(3, 1)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameFactionHStart", tOptionsParent, "Horde Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionAStart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(3, 2)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameFactionAldorStart", tOptionsParent, "Aldor Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionHStart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(3, 3)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameFactionScryerStart", tOptionsParent, "Scryer Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionAldorStart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(3, 4)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameOthertart", tOptionsParent, "Other Start", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFactionScryerStart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				StartPolyRecording(4, 1)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameEnd", tOptionsParent, "End", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameOthertart"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				if SkuNavRecordingPoly > 0 then
+					if #SkuDB.Polygons.data[SkuNavRecordingPolyFor].nodes > 0 then
+						print("recording completed > saved", SkuDB.Polygons.eTypes[SkuNavRecordingPoly][2][SkuNavRecordingPolySub][1], "ds:", SkuNavRecordingPolyFor)
+					else
+						print("recording completed, but no nodes > wasted", SkuDB.Polygons.eTypes[SkuNavRecordingPoly][2][SkuNavRecordingPolySub][1], "ds:", SkuNavRecordingPolyFor)
+					end
+					SkuNavRecordingPoly = 0
+					SkuNavRecordingPolySub = 0
+					SkuNavRecordingPolyFor = nil
+				else
+					print("no recording in process: ")--, SkuDB.Polygons.eTypes[SkuNavRecordingPoly][2][SkuNavRecordingPolySub][1])
+				end
+			end)
+
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameWrite", tOptionsParent, "Write", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameWorldStart"], "TOPRIGHT", 0, 0)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				local tStr = tostring(SkuDB.Polygons.data)
+				_G["SkuNavMMMainEditBoxEditBox"]:SetText(tStr)
+			end)
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameRead", tOptionsParent, "Read", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameWrite"], "TOPLEFT", 95, 0)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				local tStr = tostring(SkuDB.Polygons.data)
+				local f = assert(loadstring("return {".._G["SkuNavMMMainEditBoxEditBox"]:GetText().."}"), "invalid")
+				SkuDB.Polygons.data = f()
+				setmetatable(SkuDB.Polygons.data, SkuPrintMT)
+				_G["SkuNavMMMainEditBoxEditBox"]:ClearFocus()
+			end)
+
 			-- EditBox
 			local f = CreateFrame("Frame", "SkuNavMMMainFrameEditBox", tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
 			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameWrite"], "TOPLEFT", 2, -20)
 			f:SetSize(170,140)
-			f:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile = "", Size = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
-			f:SetBackdropBorderColor(0, .44, .87, 0.5) -- darkblue
+			--f:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile = "", Size = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			--f:SetBackdropBorderColor(0, .44, .87, 0.5) -- darkblue
+			f:SetBackdrop({bgFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeFile = "Interface\\Tooltips\\UI-Tooltip-Background", edgeSize = 2, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
+			f:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+			f:SetBackdropColor(0.5, 0.5, 0.5, 1)
 			f:Show()
+
 			local sf = CreateFrame("ScrollFrame", "SkuNavMMMainEditBoxScrollFrame", _G["SkuNavMMMainFrameEditBox"], "UIPanelScrollFrameTemplate")
 			sf:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameEditBox"], "TOPLEFT", 0, 0)
 			sf:SetSize(f:GetSize())
@@ -1261,29 +1670,43 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			sf:SetScrollChild(eb)
 
-			-- filter EditBox
-			local f = CreateFrame("Frame", "SkuNavMMMainFrameFilterEditBox", tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)--, "DialogBoxFrame")
-			f:SetPoint("TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 2, -60)
-			f:SetSize(286, 20)
-			f:SetBackdrop({bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",edgeFile = "", Size = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 },})
-			f:SetBackdropBorderColor(0, .44, .87, 0.5) -- darkblue
-			f:Show()
-			local eb = CreateFrame("EditBox", "SkuNavMMMainFrameFilterEditBoxEditBox", _G["SkuNavMMMainFrameFilterEditBox"])
-			eb:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
-			eb:SetSize(f:GetSize())
-			eb:SetMultiLine(false)
-			eb:SetAutoFocus(false)
-			eb:SetFontObject("ChatFontSmall")
-			eb:SetScript("OnEscapePressed", function(self) 
-				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
-				self:ClearFocus()
-				PlaySound(89)
-			end)
-			eb:SetScript("OnEnterPressed", function(self) 
-				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
-				self:ClearFocus()
-				PlaySound(89)
-			end)
+			-------
+			if SkuOptions.db.profile["SkuNav"].showAdvancedControls > 0 then
+				_G["SkuNavMMMainFrameSuffixAutodeDEEditBox"]:Show()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEEditBox"]:Show()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEClear"]:Show()
+				_G["SkuNavMMMainFrameSuffixAutoenUSEditBox"]:Show()
+				_G["SkuNavMMMainFrameSuffixCustomenUSEditBox"]:Show()
+			elseif Sku.Loc == "enUS" then
+				_G["SkuNavMMMainFrameSuffixAutodeDEEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEClear"]:Hide()
+				_G["SkuNavMMMainFrameSuffixAutoenUSEditBox"]:Show()
+				_G["SkuNavMMMainFrameSuffixCustomenUSEditBox"]:Show()
+			elseif Sku.Loc == "deDE" then
+				_G["SkuNavMMMainFrameSuffixAutodeDEEditBox"]:Show()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEEditBox"]:Show()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEClear"]:Show()
+				_G["SkuNavMMMainFrameSuffixAutoenUSEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomenUSEditBox"]:Hide()
+			end
+			if Sku.Loc == "deDE" and SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+				_G["SkuNavMMMainFrameSuffixAutoenUSEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomenUSEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomenUSClear"]:Hide()
+				_G["SkuNavMMMainFrameSuffixAutoenUSEditBoxLabel"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomenUSEditBoxLabel"]:Hide()
+			end
+			if Sku.Loc == "enUS" and SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+				_G["SkuNavMMMainFrameSuffixAutodeDEEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEEditBox"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEClear"]:Hide()
+				_G["SkuNavMMMainFrameSuffixAutodeDEEditBoxLabel"]:Hide()
+				_G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxLabel"]:Hide()
+			end
+
+
+				
 
 			----------------------------map
 			--map frame main container
@@ -1567,7 +1990,7 @@ function SkuNav:SkuNavMMOpen()
 			"SkuNavMMMainFrameRead",
 		}
 		for _, v in pairs(tObjs) do
-			if SkuOptions.db.profile["SkuNav"].showPolyControls ~= true then
+			if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 3 then
 				_G[v]:Hide()
 			else
 				_G[v]:Show()
@@ -1576,6 +1999,7 @@ function SkuNav:SkuNavMMOpen()
 
 		if not _G["SkuNavMMMainFrame"]:IsShown() then
 			_G["SkuNavMMMainFrame"]:Show()
+			_G["SkuNavMMMainFrameOptionsParent"]:Show()
 		end
 
 		if not SkuWaypointWidgetRepoMM then
@@ -1601,7 +2025,7 @@ function SkuNav:SkuNavMMOpen()
 
 		_G["SkuNavMMMainFrame"]:ClearAllPoints()
 		_G["SkuNavMMMainFrame"]:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosX - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth(), SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainPosY)
-		_G["SkuNavMMMainFrame"]:SetWidth(SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainWidth + _G["SkuNavMMMainFrameOptionsParent"]:GetWidth())
+		_G["SkuNavMMMainFrame"]:SetWidth(SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainWidth )--+ _G["SkuNavMMMainFrameOptionsParent"]:GetWidth())
 		_G["SkuNavMMMainFrame"]:SetHeight(SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainHeight)
 
 		_G["SkuNavMMMainFrameScrollFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
@@ -1614,9 +2038,11 @@ function SkuNav:SkuNavMMOpen()
 		_G["SkuNavMMMainFrameScrollFrameContent1"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() - _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() - 10)
 		_G["SkuNavMMMainFrameScrollFrameContent1"]:SetHeight(_G["SkuNavMMMainFrame"]:GetHeight() - 10)
 
+		SkuNav:UpdateAutoPrefixes()
 	else
 		if _G["SkuNavMMMainFrame"] then
 			_G["SkuNavMMMainFrame"]:Hide()
+			_G["SkuNavMMMainFrameOptionsParent"]:Hide()
 		end
 	end
 end

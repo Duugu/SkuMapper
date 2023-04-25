@@ -1,9 +1,9 @@
 ## Interface: 30401
 ## Interface-Wrath: 30401
-## Title: SkuMapper (2.4)
+## Title: SkuMapper (3)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
-## Version: 2.4
+## Version: 3
 
 Bindings.xml
 embeds.xml
@@ -30,7 +30,6 @@ SkuDB\assets\objects.lua
 SkuDB\assets\objects_fixes.lua
 SkuDB\assets\spells.lua
 SkuDB\assets\polygons.lua
-SkuDB\assets\routedata_global.lua
 
 SkuDB\assets\WotLK\quests.lua
 SkuDB\assets\WotLK\quests_fixes.lua

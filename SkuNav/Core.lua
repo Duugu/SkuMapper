@@ -6,18 +6,54 @@ local L = Sku.L
 SkuNav = SkuNav or LibStub("AceAddon-3.0"):NewAddon("SkuNav", "AceConsole-3.0", "AceEvent-3.0")
 
 SkuDrawFlag = false
+SkuNav.tCoverSize = 20
+SkuNav.tWpEditMode = 2
+SkuNav.TrackSize = 10
+SkuNav.Tracks = {
+	startid = nil,
+	endids = {
+		[1] = nil,
+	},
+}
+SkuNav.TrackedLevel = -1
+SkuNav.TrackedLevels = {
+	[-11] = -10,
+	[-10] = -9,
+	[-9] = -8,
+	[-8] = -7,
+	[-7] = -6,
+	[-6] = -5,
+	[-5] = -4,
+	[-4] = -3,
+	[-3] = -2,
+	[-2] = -1,
+	[-1] = "none",
+	[0] = 0,
+	[1] = 1,
+	[2] = 2,
+	[3] = 3,
+	[4] = 4,
+	[5] = 5,
+	[6] = 6,
+	[7] = 7,
+	[8] = 8,
+	[9] = 9,
+	[10] = 10,
+}
 
 local slower = string.lower
 local sfind = string.find
 local ssub = string.sub
 local tinsert = table.insert
 
+SkuNav.ActionsHistory = {}
+
 ------------------------------------------------------------------------------------------------------------------------
 WaypointCache = {}
-local WaypointCacheLookupAll = {}
-local WaypointCacheLookupIdForCacheIndex = {}
-local WaypointCacheLookupCacheNameForId = {}
-local WaypointCacheLookupPerContintent = {}
+WaypointCacheLookupAll = {}
+WaypointCacheLookupIdForCacheIndex = {}
+WaypointCacheLookupCacheNameForId = {}
+WaypointCacheLookupPerContintent = {}
 
 function SkuNav:CreateWaypointCache(aAddLocalizedNames)
 	SkuDrawFlag = false
@@ -186,51 +222,56 @@ function SkuNav:CreateWaypointCache(aAddLocalizedNames)
 						if tData[1] ~= false then
 							local tName = tData.names[Sku.Loc]
 
-							local tWaypointData = tData
-							if tWaypointData then
-								if tWaypointData.contintentId then
-									local isUiMap = SkuNav:GetUiMapIdFromAreaId(tWaypointData.areaId)
-									local tWpIndex = (#WaypointCache + 1)
-									local tOldLinks = {
-										byId = nil,
-										byName = nil,
-									}
-									if WaypointCacheLookupAll[tName] then
-										if WaypointCacheLookupPerContintent[WaypointCache[WaypointCacheLookupAll[tName]].contintentId] then
-											WaypointCacheLookupPerContintent[WaypointCache[WaypointCacheLookupAll[tName]].contintentId][WaypointCacheLookupAll[tName]] = nil
+							if WaypointCacheLookupAll[tName] then
+								WaypointCache[WaypointCacheLookupAll[tName]].worldX = tData.worldX
+								WaypointCache[WaypointCacheLookupAll[tName]].worldY = tData.worldY
+							else
+								local tWaypointData = tData
+								if tWaypointData then
+									if tWaypointData.contintentId then
+										local isUiMap = SkuNav:GetUiMapIdFromAreaId(tWaypointData.areaId)
+										local tWpIndex = (#WaypointCache + 1)
+										local tOldLinks = {
+											byId = nil,
+											byName = nil,
+										}
+										if WaypointCacheLookupAll[tName] then
+											if WaypointCacheLookupPerContintent[WaypointCache[WaypointCacheLookupAll[tName]].contintentId] then
+												WaypointCacheLookupPerContintent[WaypointCache[WaypointCacheLookupAll[tName]].contintentId][WaypointCacheLookupAll[tName]] = nil
+											end
+											tOldLinks = WaypointCache[WaypointCacheLookupAll[tName]].links
+											tWpIndex = WaypointCacheLookupAll[tName]
 										end
-										tOldLinks = WaypointCache[WaypointCacheLookupAll[tName]].links
-										tWpIndex = WaypointCacheLookupAll[tName]
+
+										WaypointCache[tWpIndex] = {
+											name = tName,
+											role = "",
+											typeId = 1,
+											dbIndex = tIndex,
+											spawn = 1,
+											contintentId = tWaypointData.contintentId,
+											areaId = tWaypointData.areaId,
+											uiMapId = isUiMap,
+											worldX = tWaypointData.worldX,
+											worldY = tWaypointData.worldY,
+											createdAt = tWaypointData.createdAt,
+											createdBy = tWaypointData.createdBy,
+											size = tWaypointData.size or 1,
+											comments = tWaypointData.lComments or {["deDE"] = {},["enUS"] = {},},
+											spawnNr = nil,
+											links = tOldLinks,
+										}
+
+										WaypointCacheLookupAll[tName] = tWpIndex
+										local tWpId = SkuNav:BuildWpIdFromData(1, tIndex, 1, tWaypointData.areaId)
+										WaypointCacheLookupIdForCacheIndex[tWpId] =  tWpIndex
+										WaypointCacheLookupCacheNameForId[tName] = tWpId										
+
+										if not WaypointCacheLookupPerContintent[tWaypointData.contintentId] then
+											WaypointCacheLookupPerContintent[tWaypointData.contintentId] = {}
+										end
+										WaypointCacheLookupPerContintent[tWaypointData.contintentId][tWpIndex] = tName
 									end
-
-									WaypointCache[tWpIndex] = {
-										name = tName,
-										role = "",
-										typeId = 1,
-										dbIndex = tIndex,
-										spawn = 1,
-										contintentId = tWaypointData.contintentId,
-										areaId = tWaypointData.areaId,
-										uiMapId = isUiMap,
-										worldX = tWaypointData.worldX,
-										worldY = tWaypointData.worldY,
-										createdAt = tWaypointData.createdAt,
-										createdBy = tWaypointData.createdBy,
-										size = tWaypointData.size or 1,
-										comments = tWaypointData.lComments or {["deDE"] = {},["enUS"] = {},},
-										spawnNr = nil,
-										links = tOldLinks,
-									}
-
-									WaypointCacheLookupAll[tName] = tWpIndex
-									local tWpId = SkuNav:BuildWpIdFromData(1, tIndex, 1, tWaypointData.areaId)
-									WaypointCacheLookupIdForCacheIndex[tWpId] =  tWpIndex
-									WaypointCacheLookupCacheNameForId[tName] = tWpId										
-
-									if not WaypointCacheLookupPerContintent[tWaypointData.contintentId] then
-										WaypointCacheLookupPerContintent[tWaypointData.contintentId] = {}
-									end
-									WaypointCacheLookupPerContintent[tWaypointData.contintentId][tWpIndex] = tName
 								end
 							end
 						else
@@ -461,10 +502,11 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:CreateWpLink(aWpAName, aWpBName)
-	--print("CreateWpLink", aWpAName, aWpBName)
+	print("CreateWpLink", aWpAName, aWpBName)
 	if aWpAName ~= aWpBName then
 		local tWpAIndex = WaypointCacheLookupAll[aWpAName]
 		local tWpBIndex = WaypointCacheLookupAll[aWpBName]
+		print("tWpAIndex", tWpAIndex, SkuNav:GetWaypointData2(nil, tWpAIndex), "tWpBIndex", tWpBIndex, SkuNav:GetWaypointData2(nil, tWpBIndex))
 		local tWpAData = SkuNav:GetWaypointData2(nil, tWpAIndex)
 		local tWpBData = SkuNav:GetWaypointData2(nil, tWpBIndex)
 
@@ -548,14 +590,31 @@ function SkuNav:GetBestMapForUnit(aUnitId)
 		end
 	end
 
+	if tPlayerUIMap == nil then
+		local tMMZoneText = GetMinimapZoneText()
+		if tMMZoneText == L["Deeprun Tram"] then
+			tPlayerUIMap = 2257
+		end
+	end
+
+	if tPlayerUIMap == 126 then
+		tPlayerUIMap = 125
+	end
+
 	return tPlayerUIMap
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnInitialize()
 	SkuNav:RegisterEvent("PLAYER_LOGIN")
+	SkuNav:RegisterEvent("PLAYER_LOGOUT")
 	SkuNav:RegisterEvent("PLAYER_ENTERING_WORLD")
 	SkuNav:RegisterEvent("PLAYER_LEAVING_WORLD")
+	SkuNav:RegisterEvent("NEW_WMO_CHUNK")
+	SkuNav:RegisterEvent("ZONE_CHANGED")
+	SkuNav:RegisterEvent("ZONE_CHANGED_INDOORS")
+	SkuNav:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -657,16 +716,21 @@ function SkuNav:GetAreaIdFromUiMapId(aUiMapId)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
-function SkuNav:GetAreaIdFromAreaName(aAreaName)
+function SkuNav:GetAreaIdFromAreaName(aAreaName, aIgnoreCase)
 	--dprint("GetAreaIdFromAreaName", aAreaName)
 	local rAreaId
 	local tPlayerUIMap = SkuNav:GetBestMapForUnit("player")
 	for i, v in pairs(SkuDB.InternalAreaTable) do
-		if (v.AreaName_lang[Sku.Loc] == aAreaName) and (SkuNav:GetUiMapIdFromAreaId(i) == tPlayerUIMap) then
-			rAreaId = i
+		if not aIgnoreCase then
+			if (v.AreaName_lang[Sku.Loc] == aAreaName) and (SkuNav:GetUiMapIdFromAreaId(i) == tPlayerUIMap) then
+				rAreaId = i
+			end
+		else
+			if (string.lower(v.AreaName_lang[Sku.Loc]) == string.lower(aAreaName)) and (SkuNav:GetUiMapIdFromAreaId(i) == tPlayerUIMap) then
+				rAreaId = i
+			end
 		end
 	end
-	--dprint("  ", tonumber(rAreaId))
 	return rAreaId
 end
 
@@ -720,6 +784,13 @@ function SkuNav:GetCurrentAreaId(aUnitId)
 					break
 				end
 			end
+		end
+	end
+
+	if not tAreaId then
+		local tMinimapZoneText = GetMinimapZoneText()
+		if tMinimapZoneText == "Versteck der Defias" then --fix for Die Todesminen zone
+			tAreaId = 1518
 		end
 	end
 
@@ -1047,11 +1118,40 @@ function SkuNav:CreateSkuNavControl()
 	local ttimeDegreesChangeInitial = nil
 	local ttime = GetServerTime()
 	local ttimeDraw = GetServerTime()
+	SkuOptions.db.profile["SkuNav"].showAdvancedControls = SkuOptions.db.profile["SkuNav"].showAdvancedControls or 1
+
+	local f = CreateFrame("Frame", "SkuMouseArea", UIParent)
+	f:SetPoint("CENTER")
+	f:SetSize(10, 10)
+	f:SetFrameStrata("TOOLTIP")
+	f:SetAlpha(0.5)
+	f.tex = f:CreateTexture()
+	f.tex:SetAllPoints(f)
+	f.tex:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\circle.tga")
+	f.tex:SetDrawLayer("OVERLAY")
+	if SkuOptions.db.profile["SkuNav"].showAdvancedControls > 0 then
+		f:Show()
+	else
+		f:Hide()
+	end
 
 	local f = _G["SkuNavControl"] or CreateFrame("Frame", "SkuNavControl", UIParent)
 	f:SetScript("OnUpdate", function(self, time) 
 		ttime = ttime + time
 		ttimeDraw = ttimeDraw + time
+
+		if SkuNav.tWpEditMode == 1 and _G["SkuNavMMMainFrameScrollFrame1"]:IsMouseOver() == true then
+			if _G["SkuMouseArea"]:IsShown() ~= true then
+				_G["SkuMouseArea"]:Show()
+			end
+			_G["SkuMouseArea"]:SetSize(SkuNav.tCoverSize * 2, SkuNav.tCoverSize * 2)
+			local tCursorX, tCursorY = GetCursorPosition()
+			_G["SkuMouseArea"]:SetPoint("CENTER", tCursorX - (GetScreenWidth() / 2), tCursorY - (GetScreenHeight() / 2))
+		else
+			if _G["SkuMouseArea"]:IsShown() ~= false then
+				_G["SkuMouseArea"]:Hide()
+			end
+		end
 
 		--tmp drawing rts on UIParent for debugging
 		if ttimeDraw > (SkuNavMmDrawTimer or 0.2) then
@@ -1070,7 +1170,18 @@ function SkuNav:CreateSkuNavControl()
 						GameTooltip:ClearLines()
 						GameTooltip:SetOwner(i, "ANCHOR_RIGHT")
 						GameTooltip:AddLine(i.aText, 1, 1, 1)
-						GameTooltip:Show()
+						local tNonAutoLevel = SkuNav:GetNonAutoLevel(WaypointCacheLookupCacheNameForId[i.aText])
+						if tNonAutoLevel then
+							GameTooltip:AddLine("(Layer "..tNonAutoLevel..")", 0.33, 1, 0.33)
+						end
+						GameTooltip:AddLine("uid "..WaypointCacheLookupCacheNameForId[i.aText], 1, 0.33, 0.33)
+
+
+						if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+							GameTooltip:Hide()
+						else
+							GameTooltip:Show()
+						end
 						i:SetSize(3, 3)
 						local r, g, b, t = i:GetVertexColor()
 						i.oldColor = {r = r, g = g, b = b, t = t}
@@ -1083,48 +1194,123 @@ function SkuNav:CreateSkuNavControl()
 						end
 					end
 				end
+				if WaypointCache[WaypointCacheLookupAll[i.aText]].tackStep ~= nil then
+					i:SetColorTexture(0.33, 0.33, 1, 1)
+				end				
 			end
 		end
 		
 		if SkuWaypointWidgetRepoMM then
 			if _G["SkuNavMMMainFrame"]:IsShown() then
 				SkuWaypointWidgetCurrent = nil
-				for i, v in SkuWaypointWidgetRepoMM:EnumerateActive() do
-					if i:IsVisible() == true then
-						if i.aText ~= "line" then
-							if i:IsMouseOver() then
-								local _, _, _, x, y = i:GetPoint(1)
-								local MMx, MMy = _G["SkuNavMMMainFrame"]:GetSize()
-								MMx, MMy = MMx / 2, MMy / 2
-								if x > -MMx and x < MMx and y > -MMy and y < MMy then
-									if i.aText ~= SkuWaypointWidgetCurrent then
-										SkuWaypointWidgetCurrent = i.aText
 
-										GameTooltip.SkuWaypointWidgetCurrent = i.aText
+				local tCursorX, tCursorY = GetCursorPosition()
+				local _, _, _, tBlX, tBlY = _G["SkuNavMMMainFrame"]:GetPoint(1)
+				local MMx, MMy = _G["SkuNavMMMainFrame"]:GetSize()
+				--MMx = MMx + (_G["SkuNavMMMainFrameOptionsParent"]:GetWidth() or 0)
+
+				for i, v in SkuWaypointWidgetRepoMM:EnumerateActive() do
+					if i:IsVisible() == true and _G["SkuNavMMMainFrameScrollFrame1"]:IsMouseOver() then
+						if i.aText and i.aText ~= "line" then
+							local _, _, _, x, y = i:GetPoint(1)
+							local taText = i.aText
+							if string.find(taText, "\\r\\") then
+								local s1, s1 = string.match(taText, "(.+)\\r\\n(.+)")
+								taText = s1
+							end
+
+							i.isMode1Mouseover = nil
+
+							if SkuNav.tWpEditMode == 1 then
+								if i:IsMouseOver() then
+									if taText ~= SkuWaypointWidgetCurrent then
+										SkuWaypointWidgetCurrent = taText
+										GameTooltip.SkuWaypointWidgetCurrent = taText
 										GameTooltip:ClearLines()
 										GameTooltip:SetOwner(i, "ANCHOR_RIGHT")
-										GameTooltip:AddLine(i.aText, 1, 1, 1)
-
+										GameTooltip:AddLine(taText, 1, 1, 1)
+										local tNonAutoLevel = SkuNav:GetNonAutoLevel(WaypointCacheLookupCacheNameForId[taText])
+										if tNonAutoLevel then
+											GameTooltip:AddLine("(Layer "..tNonAutoLevel..")", 0.33, 1, 0.33)
+										end
+										if WaypointCacheLookupCacheNameForId[taText] then
+											GameTooltip:AddLine("uid "..WaypointCacheLookupCacheNameForId[taText], 1, 0.33, 0.33)
+										end
+										
 										if i.aComments then
 											for x = 1, #i.aComments do
 												GameTooltip:AddLine(i.aComments[x], 1, 1, 0)
 											end
 										end
 										GameTooltip:Show()
-										local r, g, b, a = i:GetVertexColor()
-										i.oldColor = {r = r, g = g, b = b, a = a}
-										--i.oldColor = i:GetVertexColor()
-										i:SetColorTexture(0, 1, 1)
-									else
-										--i:SetSize(2, 2)
-										if i.oldColor then
-											i:SetColorTexture(i.oldColor.r, i.oldColor.g, i.oldColor.b, i.oldColor.a)
+									end
+								end
+
+								local tDistance = SkuNav:Distance(tCursorX, tCursorY, math.floor(((MMx/2) + tBlX + x)), math.floor(((MMy/2) + tBlY + y)))
+								if tDistance < SkuNav.tCoverSize then
+									local r, g, b, a = i:GetVertexColor()
+									i.oldColorMo = {r = r, g = g, b = b, a = a}
+									i:SetColorTexture(0, 0, 1)
+									i.isMode1Mouseover = true
+								else
+									if i.oldColorMo then
+										i:SetColorTexture(i.oldColorMo.r, i.oldColorMo.g, i.oldColorMo.b, i.oldColorMo.a)
+										i.oldColorMo = nil
+									end
+								end
+							else
+								if i:IsMouseOver() then
+									MMx, MMy = MMx / 2, MMy / 2
+									if x > -MMx and x < MMx and y > -MMy and y < MMy then
+										if taText ~= SkuWaypointWidgetCurrent then
+											SkuWaypointWidgetCurrent = taText
+
+											GameTooltip.SkuWaypointWidgetCurrent = taText
+											GameTooltip:ClearLines()
+											GameTooltip:SetOwner(i, "ANCHOR_RIGHT")
+											GameTooltip:AddLine(taText, 1, 1, 1)
+											local tNonAutoLevel = SkuNav:GetNonAutoLevel(WaypointCacheLookupCacheNameForId[taText])
+											if tNonAutoLevel then
+												GameTooltip:AddLine("(Layer "..tNonAutoLevel..")", 0.33, 1, 0.33)
+											end
+
+											if taText and WaypointCacheLookupCacheNameForId[taText] then
+												GameTooltip:AddLine("uid "..WaypointCacheLookupCacheNameForId[taText], 1, 0.33, 0.33)
+											end
+
+											if i.aComments then
+												for x = 1, #i.aComments do
+													GameTooltip:AddLine(i.aComments[x], 1, 1, 0)
+												end
+											end
+											if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+												GameTooltip:Hide()
+											else
+												GameTooltip:Show()
+											end										
+											local r, g, b, a = i:GetVertexColor()
+											i.oldColor = {r = r, g = g, b = b, a = a}
+											--i.oldColor = i:GetVertexColor()
+											i:SetColorTexture(0, 1, 1)
+										else
+											--i:SetSize(2, 2)
+											if i.oldColor then
+												i:SetColorTexture(i.oldColor.r, i.oldColor.g, i.oldColor.b, i.oldColor.a)
+											end
+
 										end
 									end
 								end
 							end
 						end
 					end
+
+					if WaypointCacheLookupAll[i.aText] then
+						if WaypointCache[WaypointCacheLookupAll[i.aText]].tackStep ~= nil then
+							i:SetColorTexture(0.33, 0.33, 1, 1)
+						end
+					end
+
 				end
 			end
 		end
@@ -1185,31 +1371,54 @@ function SkuNav:OnMouseLeftHold()
 
 end
 
-
-
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouseLeftUp()
-	if IsShiftKeyDown() then
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+
+	--add selection end point
+	if IsShiftKeyDown() == false and IsAltKeyDown() == true and SkuOptions.db.profile["SkuNav"].showAdvancedControls > 0 then
+		if SkuNav.tWpEditMode == 2 then
+			local tWaypointCacheId = WaypointCacheLookupAll[SkuWaypointWidgetCurrent]
+			SkuNav.Tracks.endids[#SkuNav.Tracks.endids + 1] = tWaypointCacheId
+			SkuNav:RebuildTracks()
+			return
+		end
+	
+	elseif IsShiftKeyDown() == true and IsAltKeyDown() == false then
 		--Create WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link deleting in progress.")
 			SkuNav:PlayFailSound()
 			return
 		end
+
 		local tWy, tWx = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
 		local tWpSize = 1
 		--if IsShiftKeyDown() then
 			--tWpSize = 5
 		--end
-		local tNewWpName = SkuNav:CreateWaypoint(nil, tWx, tWy, tWpSize)
-		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true and SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp then
-			SkuNav:CreateWpLink(tNewWpName, SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp)
-			SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp = tNewWpName
+
+		local tNewWpName = SkuNav:CreateWaypoint(nil, tWx, tWy, tWpSize, nil, nil, nil)
+		if tNewWpName then
+			if SkuOptions.db.profile["SkuNav"].routeRecording == true and 
+				SkuOptions.db.profile["SkuNav"].routeRecordingLastWp and
+				SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true
+			then
+				SkuNav:CreateWpLink(tNewWpName, SkuOptions.db.profile["SkuNav"].routeRecordingLastWp)
+				SkuOptions.db.profile["SkuNav"].routeRecordingLastWp = tNewWpName
+			end
+		else
+			return
 		end
+
 		SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 		print("Waypoint created")
 
-	elseif IsAltKeyDown() then
+	elseif IsShiftKeyDown() == true and IsAltKeyDown() == true then
 		--Add comment to WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 			print("not possible. link recording or deleting in progress.")
@@ -1219,6 +1428,7 @@ function SkuNav:OnMouseLeftUp()
 				SkuOptions:AddCommentToWp(SkuWaypointWidgetCurrent)
 			end
 		end
+
 	else
 		--Start/end link add
 		if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
@@ -1236,16 +1446,15 @@ function SkuNav:OnMouseLeftUp()
 			end
 		
 			if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
-				--print("Start:", tWpName)
 				SkuNav:StartRouteRecording(tWpName)
 			else
 				if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete ~= true then
-					--print("End:", tWpName)
 					SkuNav:EndRouteRecording(tWpName)
 				end
 			end
 			SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 		end
+
 	end
 end
 
@@ -1261,6 +1470,12 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouseRightUp()
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+
 	if IsAltKeyDown() then
 		--Delete comments from WP
 		if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
@@ -1315,11 +1530,9 @@ function SkuNav:OnMouseRightUp()
 			end
 		
 			if SkuOptions.db.profile[MODULE_NAME].routeRecording ~= true then
-				--print("Start:", tWpName)
 				SkuNav:StartRouteRecording(tWpName, true)
 			else
 				if SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
-					--print("End:", tWpName)	
 					SkuNav:EndRouteRecording(tWpName, true)
 				end
 			end
@@ -1330,6 +1543,13 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse4Down()
+	dprint("OnMouse4Down")
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+		
 	--start Move WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 		print("not possible. link recording or deleting in progress.")
@@ -1337,6 +1557,9 @@ function SkuNav:OnMouse4Down()
 	else
 		local tWpName = SkuWaypointWidgetCurrent
 		if tWpName then
+			SkuNav.moveTmpOldUidLevel = SkuOptions.db.global[MODULE_NAME].WaypointLevels[WaypointCacheLookupCacheNameForId[tWpName]]
+			--SkuOptions.db.global[MODULE_NAME].WaypointLevels[WaypointCacheLookupCacheNameForId[tWpName]] = nil
+			--WaypointCacheLookupIdForCacheIndex[WaypointCacheLookupCacheNameForId[tWpName]] = nil
 			local wpObj = SkuNav:GetWaypointData2(tWpName)
 			if wpObj then
 				tCurrentDragWpName = tWpName
@@ -1348,6 +1571,12 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse4Hold()
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+		
 	--Hold Move WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 	else
@@ -1364,11 +1593,18 @@ function SkuNav:OnMouse4Hold()
 				end
 			end
 		end
+		
 	end
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse4Up()
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+		
 	--End Move WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 		print("not possible. link recording or deleting in progress.")
@@ -1379,11 +1615,35 @@ function SkuNav:OnMouse4Up()
 			if tWpData then
 				local tDragY, tDragX = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
 				if tDragX and tDragY then
+					--SkuOptions.db.global[MODULE_NAME].WaypointLevels[WaypointCacheLookupCacheNameForId[tCurrentDragWpName]] = nil
 					SkuNav:SetWaypoint(tCurrentDragWpName, {
 						worldX = tDragX,
 						worldY = tDragY,
 					})
 					SkuOptions.db.global["SkuNav"].hasCustomMapData = true
+					local tWpData = SkuNav:GetWaypointData2(tCurrentDragWpName)
+					local tUid = SkuNav:BuildWpIdFromData(
+						tWpData.typeId,
+						tWpData.dbIndex,
+						tWpData.spawn,
+						tWpData.areaId
+					)					
+
+					SkuOptions.db.global[MODULE_NAME].WaypointLevels[tUid] = SkuNav.moveTmpOldUidLevel
+					
+					local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetAreaIdFromMapDropdown()))
+					local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetAreaIdFromMapDropdown())
+				
+					for x = 1, #WaypointCache do
+						if WaypointCacheLookupPerContintent[tcontintentId][x] then
+							if WaypointCache[x].name == tCurrentDragWpName then
+								WaypointCacheLookupIdForCacheIndex[tUid] = x
+								WaypointCacheLookupCacheNameForId[tCurrentDragWpName] = tUid
+							end
+						end
+					end
+				
+					SkuNav.moveTmpOldUidLevel = nil
 				end
 			end
 		end
@@ -1407,6 +1667,53 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouseMiddleUp()
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+		
+	if IsShiftKeyDown() == false and IsAltKeyDown() == true and SkuOptions.db.profile["SkuNav"].showAdvancedControls > 0 then
+		if SkuNav.tWpEditMode == 2 then
+			local tWaypointCacheId = WaypointCacheLookupAll[SkuWaypointWidgetCurrent]
+			local tWpData = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
+			SkuNav.Tracks = {
+				startid = nil,
+				endids = {},
+			}
+			SkuNav:RebuildTracks()
+			SkuNav.Tracks = {
+				startid = tWaypointCacheId,
+				endids = {},
+			}
+			SkuNav:RebuildTracks()
+			return
+
+		else
+			local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetAreaIdFromMapDropdown()))
+			for i, v in SkuWaypointWidgetRepoMM:EnumerateActive() do
+				if i:IsVisible() == true and _G["SkuNavMMMainFrameScrollFrame1"]:IsMouseOver() then
+					if i.aText and i.aText ~= "line" then
+						if i.isMode1Mouseover == true then
+							for x = 1, #WaypointCache do
+								if WaypointCacheLookupPerContintent[tcontintentId][x] then
+									if WaypointCache[x].name == i.aText then
+										if WaypointCache[x].tackStep == nil then --and WaypointCache[x].tackStart == nil and WaypointCache[x].tackend == nil
+											WaypointCache[x].tackStep = 99999
+										else
+											WaypointCache[x].tackStep = nil
+										end
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+			return
+		end
+	end
+
 	--Rename WP
 	if SkuOptions.db.profile[MODULE_NAME].routeRecording == true or SkuOptions.db.profile[MODULE_NAME].routeRecordingDelete == true then
 		print("not possible. link recording or deleting in progress.")
@@ -1421,7 +1728,7 @@ function SkuNav:OnMouseMiddleUp()
 					SkuNav:PlayFailSound()
 					return
 				end
-				SkuOptions:EditBoxShow("", function(a, b, c) 
+				SkuOptions:EditBoxShow(tOldName, function(a, b, c) 
 					local tText = SkuOptionsEditBoxEditBox:GetText() 
 					if tText ~= "" then
 						if SkuOptions:RenameWp(tOldName, tText) ~= false then
@@ -1438,6 +1745,9 @@ function SkuNav:OnMouseMiddleUp()
 					end
 				end)
 				print("enter new name and press enter or press escape to cancel")
+			else
+				print("error: no wp data")
+				SkuNav:PlayFailSound()
 			end
 		end
 	end
@@ -1455,10 +1765,250 @@ end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:OnMouse5Up()
+	if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
+		print("not possible. zone selector open.")
+		SkuNav:PlayFailSound()
+		return
+	end
+		
 	-- create poly point
 	if SkuNavRecordingPoly > 0 and SkuNavRecordingPolyFor then
 		local tWorldY, tWorldX = SkuNavMMContentToWorld(SkuNavMMGetCursorPositionContent2())
 		SkuDB.Polygons.data[SkuNavRecordingPolyFor].nodes[#SkuDB.Polygons.data[SkuNavRecordingPolyFor].nodes + 1] = {x = tWorldX, y = tWorldY,}
+	end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:UpdateWpName(aOldName, aNewName)
+	local tAddText = {
+		deDE = _G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:GetText(),
+		enUS = _G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:GetText(),
+	}
+
+	local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
+	local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetCurrentAreaId())
+
+	for x = 1, #WaypointCache do
+		if WaypointCacheLookupPerContintent[tcontintentId][x] then
+			if WaypointCache[x].name == aOldName then
+				local tOldCurrentLocName = WaypointCache[x].name
+				local tNewCurrentLocName = aNewName
+
+				WaypointCache[x].name = tNewCurrentLocName
+
+				for z = 1, #WaypointCache do
+					if WaypointCacheLookupPerContintent[tcontintentId][z] then
+						if WaypointCache[z].links and WaypointCache[z].links.byName then
+							if WaypointCache[z].links.byName[tOldCurrentLocName] then
+								local tVal = WaypointCache[z].links.byName[tOldCurrentLocName]
+								WaypointCache[z].links.byName[tNewCurrentLocName] = tVal
+								WaypointCache[z].links.byName[tOldCurrentLocName] = nil
+							end
+						end
+					end
+				end
+
+				local tval = WaypointCacheLookupAll[tOldCurrentLocName]
+				WaypointCacheLookupAll[tNewCurrentLocName] = tval
+				WaypointCacheLookupAll[tOldCurrentLocName] = nil
+
+				local tval = WaypointCacheLookupCacheNameForId[tOldCurrentLocName]
+				WaypointCacheLookupCacheNameForId[tNewCurrentLocName] = tval
+				WaypointCacheLookupCacheNameForId[tOldCurrentLocName] = nil						
+					
+				WaypointCacheLookupPerContintent[tcontintentId][x] = tNewCurrentLocName
+
+				local tOlddeDEName = SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE
+				local tNewdeDEName = aNewName
+				if Sku.Loc == "enUS" then
+					tNewdeDEName = "UNTRANSLATED "..tNewdeDEName
+				end
+				SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE = tNewdeDEName
+
+				local tOldenUSName = SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS
+				local tNewenUSName = aNewName
+				if Sku.Loc == "deDE" then
+					tNewenUSName = "UNTRANSLATED "..tNewdeDEName
+				end
+				SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS = tNewenUSName
+
+				break
+			end
+		end
+	end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:GetNonAutoLevel(aUid, aUnitName)
+	if SkuOptions.db.global[MODULE_NAME].WaypointLevels == nil then
+		return
+	end
+
+	if aUid == nil and aUnitName ~= nil then
+		local tPlayerAreaId = SkuNav:GetCurrentAreaId()
+		if not tPlayerAreaId then return end
+
+		--dalaran fix
+		if tPlayerAreaId == 100077 or tPlayerAreaId == 4613 then
+			tPlayerAreaId = 4395
+		end
+
+		for i, v in pairs(SkuDB.NpcData.Names[Sku.Loc]) do
+			if v[1] == aUnitName then
+				if SkuDB.NpcData.Data[i] then
+					if SkuDB.NpcData.Data[i][7] then
+						if SkuDB.NpcData.Data[i][7][tPlayerAreaId] then
+							if #SkuDB.NpcData.Data[i][7][tPlayerAreaId] == 1 then
+								aUid = SkuNav:BuildWpIdFromData(2, i, 1, tPlayerAreaId)
+							end
+							break
+						end
+					end
+				end
+			end
+		end
+	end
+
+	if aUid == nil then
+		return
+	end
+	
+	return SkuOptions.db.global[MODULE_NAME].WaypointLevels[aUid]
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:UpdateTracksNonAutoLevel()
+	dprint("UpdateTracksNonAutoLevel")
+
+	SkuOptions.db.global[MODULE_NAME].WaypointLevels = SkuOptions.db.global[MODULE_NAME].WaypointLevels or {}
+
+	local tLevel
+	if SkuNav.TrackedLevel == -1 then
+		tLevel = nil
+	else
+		tLevel = SkuNav.TrackedLevels[SkuNav.TrackedLevel]
+	end
+
+	local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetAreaIdFromMapDropdown()))
+	local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetAreaIdFromMapDropdown())
+
+	for x = 1, #WaypointCache do
+		if WaypointCacheLookupPerContintent[tcontintentId][x] then
+			if WaypointCache[x].tackStep ~= nil then
+				local tUid = SkuNav:BuildWpIdFromData(
+					WaypointCache[x].typeId,
+					WaypointCache[x].dbIndex,
+					WaypointCache[x].spawn,
+					WaypointCache[x].areaId
+				)
+
+				SkuOptions.db.global[MODULE_NAME].WaypointLevels[tUid] = tLevel
+			end
+		end
+	end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:UpdateTracksNames()
+	local tAddText = {
+		deDE = _G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:GetText(),
+		enUS = _G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:GetText(),
+	}
+
+	if not _G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:GetText() or not _G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:GetText() or _G["SkuNavMMMainFrameSuffixCustomdeDEEditBoxEditBox"]:GetText() == "" or _G["SkuNavMMMainFrameSuffixCustomenUSEditBoxEditBox"]:GetText() == "" then
+		print("Error: no text")
+		return
+	end
+
+	local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
+	local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetCurrentAreaId())
+
+	for x = 1, #WaypointCache do
+		if WaypointCacheLookupPerContintent[tcontintentId][x] then
+			if WaypointCache[x].tackStep ~= nil then
+				if string.sub(WaypointCache[x].name, 1, 5) == "auto " then
+					local tOldCurrentLocName = WaypointCache[x].name
+					local tNewCurrentLocName = "auto "..tAddText[Sku.Loc]..";"..string.sub(tOldCurrentLocName, 6)
+
+					WaypointCache[x].name = tNewCurrentLocName
+
+					for z = 1, #WaypointCache do
+						if WaypointCacheLookupPerContintent[tcontintentId][z] then
+							if WaypointCache[z].links and WaypointCache[z].links.byName then
+								if WaypointCache[z].links.byName[tOldCurrentLocName] then
+									local tVal = WaypointCache[z].links.byName[tOldCurrentLocName]
+									WaypointCache[z].links.byName[tNewCurrentLocName] = tVal
+									WaypointCache[z].links.byName[tOldCurrentLocName] = nil
+								end
+							end
+						end
+					end
+
+					local tval = WaypointCacheLookupAll[tOldCurrentLocName]
+					WaypointCacheLookupAll[tNewCurrentLocName] = tval
+					WaypointCacheLookupAll[tOldCurrentLocName] = nil
+
+					local tval = WaypointCacheLookupCacheNameForId[tOldCurrentLocName]
+					WaypointCacheLookupCacheNameForId[tNewCurrentLocName] = tval
+					WaypointCacheLookupCacheNameForId[tOldCurrentLocName] = nil						
+						
+					WaypointCacheLookupPerContintent[tcontintentId][x] = tNewCurrentLocName
+
+					local tOlddeDEName = SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE
+					local tNewdeDEName = "auto "..tAddText["deDE"]..";"..string.sub(tOlddeDEName, 6)
+					SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE = tNewdeDEName
+
+					local tOldenUSName = SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS
+					local tNewenUSName = "auto "..tAddText["enUS"]..";"..string.sub(tOldenUSName, 6)
+					SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS = tNewenUSName
+				end
+			end
+		end
+	end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:RebuildTracks()
+	local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
+	local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetCurrentAreaId())
+
+	for x = 1, #WaypointCache do
+		if WaypointCacheLookupPerContintent[tcontintentId][x] then
+			WaypointCache[x].tackStart = nil
+			if WaypointCache[x].tackStep ~= 99999 then
+				WaypointCache[x].tackStep = nil
+			end
+			WaypointCache[x].tackend = nil
+		end
+	end
+	if SkuNav.Tracks.startid == nil then
+		return
+	end
+
+	WaypointCache[SkuNav.Tracks.startid].tackStart = true
+	WaypointCache[SkuNav.Tracks.startid].tackStep = 1
+
+	for y = 1, #SkuNav.Tracks.endids do
+		WaypointCache[SkuNav.Tracks.endids[y]].tackend = true
+	end
+
+	local tFound = true
+	local tCount = 1
+	while tFound == true and tCount <= SkuNav.TrackSize do
+		tFound = false
+		for x = 1, #WaypointCache do
+			if WaypointCacheLookupPerContintent[tcontintentId][x] then
+				if WaypointCache[x].uiMapId == tUiMapId and WaypointCache[x].tackStep == tCount and WaypointCache[x].tackend ~= true then
+					for i, v in pairs(WaypointCache[x].links.byId) do
+						if WaypointCache[i].tackStep == nil or WaypointCache[i].tackStep == 99999 then
+							WaypointCache[i].tackStep = tCount + 1
+							tFound = true
+						end
+					end
+				end
+			end
+		end
+		tCount = tCount + 1
 	end
 end
 
@@ -1496,6 +2046,7 @@ end
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:PLAYER_LEAVING_WORLD(...)
 	if SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsed == false then
+		--[[
 		if _G["SkuNavMMMainFrameOptionsParent"]:IsShown() then
 			_G["SkuNavMMMainFrameOptionsParent"]:SetWidth(0)
 			_G["SkuNavMMMainFrameOptionsParent"]:Hide()
@@ -1507,6 +2058,7 @@ function SkuNav:PLAYER_LEAVING_WORLD(...)
 			_G["SkuNavMMMainFrameScrollFrame1"]:SetPoint("TOPLEFT", _G["SkuNavMMMainFrame"], "TOPLEFT", _G["SkuNavMMMainFrameOptionsParent"]:GetWidth() + 5, -5)
 			--SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsed = true
 		end
+		]]
 	end	
 	SkuOptions.db.profile["SkuNav"].metapathFollowingMetapaths = {}
 	if SkuOptions.db.global["SkuNav"].hasCustomMapData ~= true then
@@ -1519,22 +2071,58 @@ end
 function SkuNav:PLAYER_LOGIN(...)
 	SkuNav.MinimapFull = false
 	SkuOptions.db.global["SkuNav"] = SkuOptions.db.global["SkuNav"] or {}
+	if SkuOptions.db.profile["SkuNav"].showAdvancedControls == nil then
+		SkuOptions.db.profile["SkuNav"].showAdvancedControls = 1
+	end
 
 	--load default data if there isn't custom data
 	SkuNav:LoadDefaultMapData()
+
+	if SkuOptions.db.global["SkuNav"].WaypointsNew then
+		SkuOptions.db.global["SkuNav"].Waypoints = {}
+		for x = 1, #SkuOptions.db.global["SkuNav"].WaypointsNew do
+			local tData = SkuOptions.db.global["SkuNav"].WaypointsNew[x]
+			SkuOptions.db.global["SkuNav"].Waypoints[x] = tData
+			if SkuOptions.db.global["SkuNav"].Waypoints[x][1] ~= false then
+				local en, de = string.match(SkuOptions.db.global["SkuNav"].Waypoints[x].names, "(.+)§(.+)")
+				if not en or not de then
+					en, de = "", ""
+				end
+				SkuOptions.db.global["SkuNav"].Waypoints[x].names = {}
+				SkuOptions.db.global["SkuNav"].Waypoints[x].names["enUS"] = en
+				SkuOptions.db.global["SkuNav"].Waypoints[x].names["deDE"] = de
+			end
+		end
+	end
 
 	SkuOptions.db.profile[MODULE_NAME].routeRecording = false
 	SkuOptions.db.profile[MODULE_NAME].routeRecordingLastWp = nil
 
 	SkuNav:SkuNavMMOpen()
+	
+	SkuNav:SkuMM_PLAYER_LOGIN()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:PLAYER_LOGOUT()
+	SkuOptions.db.global["SkuNav"].WaypointsNew = {}
+	for x = 1, #SkuOptions.db.global["SkuNav"].Waypoints do
+		local tdata = SkuOptions.db.global["SkuNav"].Waypoints[x]
+		SkuOptions.db.global["SkuNav"].WaypointsNew[x] = tdata
+		if SkuOptions.db.global["SkuNav"].Waypoints[x][1] ~= false then
+			SkuOptions.db.global["SkuNav"].WaypointsNew[x].names = (SkuOptions.db.global["SkuNav"].Waypoints[x].names.enUS).."§"..(SkuOptions.db.global["SkuNav"].Waypoints[x].names.deDE)
+		end
+		SkuOptions.db.global["SkuNav"].Waypoints[x] = nil
+	end
+
+	SkuNav:SkuMM_PLAYER_LOGOUT()
+end
+---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:LoadDefaultMapData(aForce)
 	if SkuOptions.db.global["SkuNav"].hasCustomMapData ~= true or aForce then
-		local t = SkuDB.routedata["global"]["Waypoints"]
+		local t = {}--SkuDB.routedata["global"]["Waypoints"]
 		SkuOptions.db.global["SkuNav"].Waypoints = t
-		local tl = SkuDB.routedata["global"]["Links"]
+		local tl = {}--SkuDB.routedata["global"]["Links"]
 		SkuOptions.db.global["SkuNav"].Links = tl
 	end
 end
@@ -1544,6 +2132,8 @@ function SkuNav:PLAYER_ENTERING_WORLD(aEvent, aIsInitialLogin, aIsReloadingUi)
 	SkuOptions.db.profile[MODULE_NAME].metapathFollowing = false
 	SkuOptions.db.profile[MODULE_NAME].routeRecording = false
 	SkuOptions.db.profile["SkuNav"].waypointFilterString = ""
+
+
 
 	SkuNav:CreateWaypointCache()
 
@@ -1555,6 +2145,7 @@ function SkuNav:PLAYER_ENTERING_WORLD(aEvent, aIsInitialLogin, aIsReloadingUi)
 			end
 		end)
 	end
+	SkuNav:UpdateAutoPrefixes(aEvent)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1576,26 +2167,49 @@ local function SkuSpairs(t, order)
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
-function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint)
-	--dprint("CreateWaypoint", aName, aX, aY, aSize, aForcename, aIsTempWaypoint)
-	aSize = aSize or 1
-	local tPName = UnitName("player")
+function SkuNav:GetAreaIdFromMapDropdown()
+	if _G["SkuNavMMMainFrameZoneSelect"].value == -1 then
+		return SkuNav:GetCurrentAreaId()
+	elseif _G["SkuNavMMMainFrameZoneSelect"].value == -2 then
+		return
+	else
+		return _G["SkuNavMMMainFrameZoneSelect"].value
+	end
+end
 
-	if aName == nil then
-		-- this generates (almost) unique auto wp numbers, to avoid duplicates and renaming on import/export of WPs and Rts later on
-		-- numbers > 1000000 are not vocalized by SkuVoice; thus they are silent, even if they are part of the auto WP names
-		local tNumber = string.gsub(tostring(GetServerTime()..format("%.2f", GetTimePreciseSec())), "%.", "")
-		local tAutoIndex = tNumber:gsub("%.", "")
-		if SkuNav:GetWaypointData2(L["auto"]..";"..tAutoIndex) ~= nil then
-			while SkuNav:GetWaypointData2(L["auto"]..";"..tAutoIndex)  ~= nil do
-				tAutoIndex = tAutoIndex + 1
-			end
-		end
-		aName = L["auto"]..";"..tAutoIndex
-		tPName = "SkuNav"
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint, noUpdate, aCreateLinkFunc, aSilent)
+	local tNameProvided = aName
+
+	if not aX  then
+		aX, aY = UnitPosition("player")
 	end
 
 	local tAreaId = SkuNav:GetCurrentAreaId()
+
+	if not noUpdate then
+		tAreaId = SkuNav:GetAreaIdFromMapDropdown()
+
+		if not tAreaId then
+			print("Error: can't click on map with current contintent selected")
+			return
+		end
+
+		SkuNav:UpdateAutoPrefixes(nil, tAreaId)
+	end
+
+	aSize = aSize or 1
+	local tPName = UnitName("player")
+	local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
+
+	local tSequenceNumber
+
+	if aName == nil then
+		tSequenceNumber = SkuNav:GetSequenceNumber(tAreaId)
+		aName = L["auto"].." ".._G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"]:GetText()..";"..tSequenceNumber
+		tPName = "SkuNav"
+	end
+
 	local tZoneName, tAreaName_lang, tContinentID, tParentAreaID, tFaction, tFlags = SkuNav:GetAreaData(tAreaId)
 
 	--add number if name already exists
@@ -1612,7 +2226,6 @@ function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint
 		if aX and aY then
 			worldx, worldy = aX, aY
 		end
-		local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
 
 		SkuNav:SetWaypoint(aName,  {
 			["contintentId"] = tPlayerContintentId,
@@ -1623,6 +2236,46 @@ function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint
 			["createdBy"] = tPName,
 			["size"] = aSize,
 		}, aIsTempWaypoint)
+
+		local tWpIndex = WaypointCacheLookupAll[aName]
+		local tWpId = WaypointCache[tWpIndex].dbIndex
+
+		local tUntransString = "UNTRANSLATED "
+		if not noUpdate or _G["SkuNavMMMainFrameSuffixCustom"..Sku.Loc.."EditBoxEditBox"]:GetText() == "" then
+
+			local tGetSubZoneText  = GetSubZoneText()
+			local tSubZoneAreaId = SkuNav:GetAreaIdFromAreaName(tGetSubZoneText, true)
+			if tSubZoneAreaId and SkuDB.InternalAreaTable[tSubZoneAreaId] then
+
+				tUntransString = ""
+			end
+		end
+
+
+		if Sku.Loc == "enUS" then
+			if not tNameProvided then
+				SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"]["deDE"] = tUntransString..L["auto"].." ".._G["SkuNavMMMainFrameSuffixAuto".."deDE".."EditBoxEditBox"]:GetText()..";"..(tSequenceNumber or "")
+			else
+				SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"]["deDE"] = "UNTRANSLATED "..aName
+			end
+		else
+			if not tNameProvided then
+				SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"]["enUS"] = tUntransString..L["auto"].." ".._G["SkuNavMMMainFrameSuffixAuto".."enUS".."EditBoxEditBox"]:GetText()..";"..(tSequenceNumber or "")
+			else
+				SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"]["enUS"] = "UNTRANSLATED "..aName
+			end
+		end
+
+		if SkuNav.TrackedLevel ~= -1 then
+			SkuOptions.db.global[MODULE_NAME].WaypointLevels = SkuOptions.db.global[MODULE_NAME].WaypointLevels or {}
+			local tUid = SkuNav:BuildWpIdFromData(
+				WaypointCache[tWpIndex].typeId,
+				WaypointCache[tWpIndex].dbIndex,
+				WaypointCache[tWpIndex].spawn,
+				WaypointCache[tWpIndex].areaId
+			)
+			SkuOptions.db.global[MODULE_NAME].WaypointLevels[tUid] = SkuNav.TrackedLevels[SkuNav.TrackedLevel]
+		end
 	else
 		aName = nil
 	end
@@ -1633,14 +2286,19 @@ function SkuNav:CreateWaypoint(aName, aX, aY, aSize, aForcename, aIsTempWaypoint
 		end
 	end
 
-	SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
+	if not aSilent then
+		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
+	end
+
+	SkuNav:UpdateAutoPrefixes()
 
 	return aName
+	
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
-	--print("SetWaypoint", aName, aData)
+	--print("SetWaypoint", aName, aData, aIsTempWaypoint)
 
 	local tWpIndex
 	local tIsNew
@@ -1704,6 +2362,7 @@ function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
 		table.insert(SkuOptions.db.global[MODULE_NAME].Waypoints, {
 			["names"] = {
 				[Sku.Loc] = WaypointCache[tWpIndex].name,
+				[(Sku.Loc == "enUS" and "deDE" or "enUS")] = "UNTRANSLATED "..WaypointCache[tWpIndex].name,
 			},
 			["contintentId"] = WaypointCache[tWpIndex].contintentId,
 			["areaId"] = WaypointCache[tWpIndex].areaId,
@@ -1724,18 +2383,18 @@ function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
 
 		if not string.find(WaypointCache[tWpIndex].name, L["Quick waypoint"]) then
 			for i, v in pairs(Sku.Locs) do
-				if not SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[tWpIndex].dbIndex].names[v] or SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[tWpIndex].dbIndex].names[v] == "" then
-					if string.find(WaypointCache[tWpIndex].name, "auto;") then
-						SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[tWpIndex].dbIndex].names[v] = WaypointCache[tWpIndex].name
-					else
-						SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[tWpIndex].dbIndex].names[v] = "UNTRANSLATED "..WaypointCache[tWpIndex].name
-					end
+				if v ~= Sku.Loc then
+					SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[tWpIndex].dbIndex].names[v] = "UNTRANSLATED "..WaypointCache[tWpIndex].name
 				end
 			end
 		end
 	else
 		local tWpId = WaypointCache[tWpIndex].dbIndex
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"][Sku.Loc] = WaypointCache[tWpIndex].name
+
+		if SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"][Sku.Loc] ~= aName then
+			SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["names"][(Sku.Loc == "enUS" and "deDE" or "enUS")] = "UNTRANSLATED "..WaypointCache[tWpIndex].name
+		end
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["contintentId"] = WaypointCache[tWpIndex].contintentId 
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["areaId"] = WaypointCache[tWpIndex].areaId
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["worldX"] = WaypointCache[tWpIndex].worldX
@@ -1800,7 +2459,7 @@ function SkuNav:GetNpcRoles(aNpcName, aNpcId, aLocale)
 end
 
 ------------------------------------------------------------------------------------------------------------------------
-function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
+function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint, aSilent)
 	--print("DeleteWaypoint", aWpName, aIsTempWaypoint)
 	local tWpData = SkuNav:GetWaypointData2(aWpName)
 	local tWpId = WaypointCacheLookupCacheNameForId[aWpName]
@@ -1856,7 +2515,9 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint)
 		--delete from waypoint db
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] = {false}
 
-		SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
+		if not aSilent then
+			SkuNav:PlaySoundFile("Interface\\AddOns\\SkuMapper\\audio\\sound-notification15.mp3")
+		end
 	end
 	
 	SkuNav:SaveLinkDataToProfile()
@@ -1940,3 +2601,334 @@ function SkuNav:PlaySoundFile(aFileName, aIsFail)
 		PlaySoundFile(aFileName)
 	end
 end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:NEW_WMO_CHUNK(aEvent)
+	SkuNav:UpdateAutoPrefixes(aEvent)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:ZONE_CHANGED(aEvent)
+	SkuNav:UpdateAutoPrefixes(aEvent)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:ZONE_CHANGED_INDOORS(aEvent)
+	SkuNav:UpdateAutoPrefixes(aEvent)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:ZONE_CHANGED_NEW_AREA(aEvent)
+	SkuNav:UpdateAutoPrefixes(aEvent)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+local tIgnoreFirst = 0
+function SkuNav:UpdateAutoPrefixes(aEvent, aZoneId)
+	local tGetZoneText  = GetZoneText()
+	if aZoneId then
+		tGetZoneText = SkuDB.InternalAreaTable[aZoneId].AreaName_lang[Sku.Loc]
+	end
+	local tGetSubZoneText  = GetSubZoneText()
+
+	if tGetSubZoneText and tGetSubZoneText ~= "" and tGetSubZoneText == tGetZoneText then
+		tGetSubZoneText = ""
+	end
+
+	local tInOutTexts = {
+		["deDE"] = "Drinnen",
+		["enUS"] = "Inside",
+	}
+
+	if _G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"] then
+		local tInOut = ""
+		if IsIndoors() == true then
+			tInOut = tInOutTexts[Sku.Loc]..";"
+		end
+
+		if aZoneId then
+			local tAutoCurrentLocaleText = tGetZoneText
+			_G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"]:SetText(tAutoCurrentLocaleText)
+		else
+			local tAutoCurrentLocaleText = tInOut..(_G["SkuNavMMMainFrameSuffixCustom"..Sku.Loc.."EditBoxEditBox"]:GetText() ~= "" and _G["SkuNavMMMainFrameSuffixCustom"..Sku.Loc.."EditBoxEditBox"]:GetText()..";" or "")..(tGetSubZoneText ~= "" and tGetSubZoneText..";" or "")..tGetZoneText
+			_G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"]:SetText(tAutoCurrentLocaleText)
+		end
+
+
+		local tZoneAreaId = SkuNav:GetAreaIdFromAreaName(tGetZoneText, true)
+		local tSubZoneAreaId = SkuNav:GetAreaIdFromAreaName(tGetSubZoneText, true)
+		local tOtherLoc = Sku.Loc == "enUS" and "deDE" or "enUS"
+
+		tInOut = ""
+		if IsIndoors() == true then
+			tInOut = tInOutTexts[tOtherLoc]..";"
+		end
+
+		if aZoneId then
+			local tGetZoneTextOtherLoc = GetZoneText()
+			if SkuDB.InternalAreaTable[aZoneId] then
+				tGetZoneTextOtherLoc = SkuDB.InternalAreaTable[aZoneId].AreaName_lang[tOtherLoc]
+			end
+			_G["SkuNavMMMainFrameSuffixAuto"..tOtherLoc.."EditBoxEditBox"]:SetText(tGetZoneTextOtherLoc)
+		else
+			local tGetZoneTextOtherLoc = GetZoneText()
+			if tZoneAreaId and SkuDB.InternalAreaTable[tZoneAreaId] then
+				tGetZoneTextOtherLoc = SkuDB.InternalAreaTable[tZoneAreaId].AreaName_lang[tOtherLoc]
+			end
+
+			local tGetSubZoneTextOtherLoc = GetSubZoneText()		
+			if tSubZoneAreaId and SkuDB.InternalAreaTable[tSubZoneAreaId] then
+				tGetSubZoneTextOtherLoc = SkuDB.InternalAreaTable[tSubZoneAreaId].AreaName_lang[tOtherLoc]
+			end
+
+			if tGetSubZoneTextOtherLoc and tGetSubZoneTextOtherLoc ~= "" and tGetSubZoneTextOtherLoc == tGetZoneTextOtherLoc then
+				tGetSubZoneTextOtherLoc = ""
+			end
+
+			local tAutoOtherLocaleText = tInOut..(_G["SkuNavMMMainFrameSuffixCustom"..tOtherLoc.."EditBoxEditBox"]:GetText() ~= "" and _G["SkuNavMMMainFrameSuffixCustom"..tOtherLoc.."EditBoxEditBox"]:GetText()..";" or "")..(tGetSubZoneTextOtherLoc ~= "" and tGetSubZoneTextOtherLoc..";" or "")..tGetZoneTextOtherLoc
+			_G["SkuNavMMMainFrameSuffixAuto"..tOtherLoc.."EditBoxEditBox"]:SetText(tAutoOtherLocaleText)
+		end
+
+	end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:UpdateAutoName(aOldName, aNewName)
+	--print("UpdateAutoName(aOldName, aNewName)", aOldName, aNewName)
+	local tNewName = SkuNav:GetWaypointData2(aNewName)
+	if tNewName then
+		print("ERROR: This should not happen! Name already exists.")
+		return false
+	end
+
+	local tWpData = SkuNav:GetWaypointData2(aOldName)
+
+	if tWpData.typeId ~= 1 then
+		print("only custom waypoints can be renamed")
+		return
+	end
+
+	--save links
+	local tLinks = {}
+	if tWpData.links.byName then
+		for name, distance in pairs(tWpData.links.byName) do
+			tLinks[name] = distance
+		end
+	end
+
+	--delete aOlddName
+	SkuNav:DeleteWaypoint(aOldName, nil, true)
+
+	--create aNewName
+	SkuNav:CreateWaypoint(aNewName, tWpData.worldX, tWpData.worldY, tWpData.size, nil, nil, true, nil, true)
+	SkuNav:SetWaypoint(aNewName, tWpData)
+
+	--create links
+	for name, distance in pairs(tLinks) do
+		SkuNav:CreateWpLink(aNewName, name)
+	end
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+--/script SkuNav:BatchRenameAutoToZone()
+function SkuNav:BatchRenameAutoToZone()
+	SkuOptions.db.global[MODULE_NAME].SequenceNumbers = SkuOptions.db.global[MODULE_NAME].SequenceNumbers or {}
+	--SkuOptions.db.global[MODULE_NAME].SequenceNumbers = {}
+
+	local tx = 0
+	for x = 1, #SkuOptions.db.global["SkuNav"].Waypoints do
+		local tWpData = SkuOptions.db.global["SkuNav"].Waypoints[x]
+		if tWpData and tWpData.areaId and tWpData.names and SkuDB.InternalAreaTable[tWpData.areaId] then
+			if string.find(tWpData.names[Sku.Loc], L["auto"]..";") then
+				tx = tx + 1
+				local tNameStringDe = SkuDB.InternalAreaTable[tWpData.areaId].AreaName_lang["deDE"]
+				local tNameStringEn = SkuDB.InternalAreaTable[tWpData.areaId].AreaName_lang["enUS"]
+				local tCurrentParent = SkuDB.InternalAreaTable[tWpData.areaId].ParentAreaID
+
+				local tLastDe = tNameStringDe
+				local tLastEn = tNameStringEn
+				while not SkuDB.ContinentIds[tCurrentParent] do
+					if tLastDe ~= SkuDB.InternalAreaTable[tCurrentParent].AreaName_lang["deDE"] then
+						tNameStringDe = tNameStringDe..";"..SkuDB.InternalAreaTable[tCurrentParent].AreaName_lang["deDE"]
+						tLastDe = SkuDB.InternalAreaTable[tCurrentParent].AreaName_lang["deDE"] 
+					end
+					
+					if tLastEn ~= SkuDB.InternalAreaTable[tCurrentParent].AreaName_lang["enUS"] then
+						tNameStringEn = tNameStringEn..";"..SkuDB.InternalAreaTable[tCurrentParent].AreaName_lang["enUS"]
+						tLastEn = SkuDB.InternalAreaTable[tCurrentParent].AreaName_lang["enUS"] 
+					end
+					
+					tCurrentParent = SkuDB.InternalAreaTable[tCurrentParent].ParentAreaID
+				end
+
+				local tSequenceNumber = SkuNav:GetSequenceNumber(tWpData.areaId)
+				--print(x)
+
+				SkuOptions.db.global["SkuNav"].Waypoints[x].names["deDE"] = "auto "..tNameStringDe..";"..tSequenceNumber
+				--print(" ", SkuOptions.db.global["SkuNav"].Waypoints[x].names["deDE"])
+
+				SkuOptions.db.global["SkuNav"].Waypoints[x].names["enUS"] = "auto "..tNameStringEn..";"..tSequenceNumber
+				--print(" ", SkuOptions.db.global["SkuNav"].Waypoints[x].names["enUS"])
+			end
+		end
+	end
+
+	print("done:", tx)
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:GetSequenceNumber(aAreaId)	
+	if aAreaId == 100077 or aAreaId == 4395 or aAreaId == 4613 then
+		--dalaran
+		if SkuOptions.db.global[MODULE_NAME].SequenceNumbers[100077] == nil then
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers[100077] = 0
+		end
+		SkuOptions.db.global[MODULE_NAME].SequenceNumbers[100077] = SkuOptions.db.global[MODULE_NAME].SequenceNumbers[100077] + 1
+		if SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4395] == nil then
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4395] = 0
+		end
+		SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4395] = SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4395] + 1
+		if SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4613] == nil then
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4613] = 0
+		end
+		SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4613] = SkuOptions.db.global[MODULE_NAME].SequenceNumbers[4613] + 1
+	else
+		if SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] == nil then
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] = 0
+		end
+		SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] = SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] + 1
+	end
+
+	return SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId]
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+--[[
+	Ignore this. It's old stuff for creating wps with clicking on the map.
+	Just here to keep it if it should be relevant in future.
+
+	---------------------------------------------------------------------------------------------------------------------------------------
+	function SkuNav:GetAreaIdFromWorldCoords(aWorldX, aWorldY, aName, aCreateLinkFunc)
+		--print("SkuNav:GetAreaIdFromWorldCoords(", aWorldX, aWorldY, aName, aCreateLinkFunc)
+		local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
+		local aAreaIds = {}
+
+		for i, v in pairs(SkuDB.ExternalMapID) do
+			if tonumber(v.Type) == 3 then
+				local name, _, tAContiId = SkuNav:GetAreaData((v.AreaId))
+				if tAContiId == tPlayerContintentId then
+					local uiMapID, mapPosition  = C_Map.GetMapPosFromWorldPos(tPlayerContintentId, CreateVector2D(aWorldX, aWorldY), i)
+					if mapPosition.x <= 0.94 and mapPosition.x >= 0.06 and mapPosition.y <= 0.94 and mapPosition.y >= 0.06 then
+						aAreaIds[#aAreaIds + 1] = SkuNav:GetAreaIdFromUiMapId(uiMapID) --or SkuNav:GetCurrentAreaId()
+					end
+				end
+			end
+		end
+		
+		if #aAreaIds == 0 then
+			--print("---------------#aAreaIds == 0")
+			aAreaIds[1] = SkuNav:GetCurrentAreaId()
+		end
+		--print("############## aAreaIds[1]", aAreaIds[1])
+		SkuNav:ShowZoneSelector(aAreaIds, aName, aCreateLinkFunc)
+	end
+
+	---------------------------------------------------------------------------------------------------------------------------------------
+	local tSelectorWidth = 200
+	function SkuNav:ShowZoneSelector(aAreaIds, aName, aCreateLinkFunc)
+		--print("ShowZoneSelector(aAreaIds, aName, aCreateLinkFunc)", aAreaIds, aName, aCreateLinkFunc)
+		local function helper(aAreaId, aName, aCreateLinkFunc)
+			--print("helper(aAreaIds, aName, aCreateLinkFunc)", aAreaId, aName, aCreateLinkFunc)
+			SkuNav:SetWaypoint(aName, {areaId = aAreaId,})
+			--print("pre UpdateAutoPrefixes", _G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"]:GetText())
+			SkuNav:UpdateAutoPrefixes(nil, aAreaId)
+			--print("post UpdateAutoPrefixes", _G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"]:GetText())
+
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers = SkuOptions.db.global[MODULE_NAME].SequenceNumbers or {}
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] = SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] or 0
+			SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] = SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId] + 1
+			local tNewNameLoc = L["auto"].." ".._G["SkuNavMMMainFrameSuffixAuto"..Sku.Loc.."EditBoxEditBox"]:GetText()..";"..SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId]
+			--print("tNewNameLoc", tNewNameLoc)
+			SkuNav:UpdateAutoName(aName, tNewNameLoc)
+			
+			local tWP = SkuNav:GetWaypointData2(tNewNameLoc)
+			local tNewName = L["auto"].." ".._G["SkuNavMMMainFrameSuffixAuto"..(Sku.Loc == "enUS" and "deDE" or "enUS").."EditBoxEditBox"]:GetText()..";"..SkuOptions.db.global[MODULE_NAME].SequenceNumbers[aAreaId]
+			SkuOptions.db.global[MODULE_NAME].Waypoints[tWP.dbIndex].names[(Sku.Loc == "enUS" and "deDE" or "enUS")] = tNewName
+
+			SkuNav:UpdateAutoPrefixes(true)
+
+			if aCreateLinkFunc then
+				aCreateLinkFunc(tNewNameLoc)
+			end
+		end
+
+		if not _G["SkuNavZoneSelector"] then
+			local MainFrameObj = CreateFrame("Frame", "SkuNavZoneSelector", UIParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+			MainFrameObj:SetFrameStrata("TOOLTIP")
+			MainFrameObj:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+			MainFrameObj:SetHeight(154) --275
+			MainFrameObj:SetWidth(tSelectorWidth + 4)
+			MainFrameObj:EnableMouse(true)
+			MainFrameObj:SetScript("OnDragStart", function(self) self:StartMoving() end)
+			MainFrameObj:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+			MainFrameObj:SetScript("OnShow", function(self) end)			
+			MainFrameObj:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background", edgeFile="", tile = false, tileSize = 0, edgeSize = 0, insets = { left = 0, right = 0, top = 0, bottom = 0 }})
+			MainFrameObj:SetBackdropColor(1, 1, 1, 1)
+			MainFrameObj:SetMovable(true)
+			MainFrameObj:SetClampedToScreen(true)
+			MainFrameObj:RegisterForDrag("LeftButton")
+			for x = 1, 10 do
+				SkuNav:CreateButtonFrameTemplate("SkuNavZoneSelectorButton"..x, MainFrameObj, "Button"..x, tSelectorWidth, 17, "TOPLEFT", MainFrameObj, "TOPLEFT", 2, -(((x - 1) * 15) + 2))
+			end
+		end
+
+		if #aAreaIds > 1 then
+			--print("aAreaIds > 1")
+			_G["SkuNavZoneSelector"]:SetHeight((#aAreaIds * 15) + 4)
+
+			for x = 1, 10 do
+				_G["SkuNavZoneSelectorButton"..x].areaId = nil
+				_G["SkuNavZoneSelectorButton"..x]:Hide()
+			end
+
+			local tCurrentZoneButtonNumber = 0
+			for i, aId in pairs(aAreaIds) do
+				local _, tzName = SkuNav:GetAreaData(aId)
+				if SkuNav:GetCurrentAreaId() == aId then
+					tCurrentZoneButtonNumber = i
+					_G["SkuNavZoneSelectorButton"..i]:SetText("(Current) "..tzName.." ("..aId..")")
+					_G["SkuNavZoneSelectorButton"..i].Text:SetTextColor(1, 0.5, 0.5, 1)
+
+				else
+					_G["SkuNavZoneSelectorButton"..i]:SetText(tzName.." ("..aId..")")
+					_G["SkuNavZoneSelectorButton"..i].Text:SetTextColor(1, 1, 1, 1)
+				end
+
+				_G["SkuNavZoneSelectorButton"..i].areaId = aId
+				_G["SkuNavZoneSelectorButton"..i].waypointName = aName
+				_G["SkuNavZoneSelectorButton"..i]:SetScript("OnMouseUp", function(self, button) 
+					self:SetBackdrop({bgFile="Interface\\Tooltips\\UI-Tooltip-Background", edgeFile="", tile = false, tileSize = 0, edgeSize = 0, insets = { left = 2, right = 2, top = 2, bottom = 2 }})
+					self:SetBackdropColor(0.3, 0.3, 0.3, 1)
+					if self.selected == true then
+						self:SetBackdropColor(0.5, 0.5, 0.5, 1)
+					end
+					helper(aId, aName, aCreateLinkFunc)
+					_G["SkuNavZoneSelector"]:Hide()
+				end)				
+				_G["SkuNavZoneSelectorButton"..i]:Show()
+			end
+
+			local uiScale, x, y = UIParent:GetEffectiveScale(), GetCursorPosition()
+			_G["SkuNavZoneSelector"]:ClearAllPoints()
+			_G["SkuNavZoneSelector"]:SetPoint("TOP", nil, "BOTTOMLEFT", x / uiScale, (y / uiScale) + (((tCurrentZoneButtonNumber * 15) - 7) / uiScale))
+			_G["SkuNavZoneSelector"]:Show()
+
+		else
+			--print("aAreaIds == 1", aAreaIds[1])
+			_G["SkuNavZoneSelector"]:Hide()
+			C_Timer.After(0.01, function()
+				helper(aAreaIds[1], aName, aCreateLinkFunc)
+			end)
+		end
+	end
+]]

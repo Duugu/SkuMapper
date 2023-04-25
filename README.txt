@@ -6,37 +6,59 @@ For more information join the Sku Discord server: https://discord.gg/FsfKeqxZV4
 ------------------------------------------------
 Key bindings (no default bindings, set them up via Game Settings > Interface > Key bindings > Other)
 	Open Sku minimap
-	Add normal waypoint
+	Add normal waypoint (same as CTRL + LEFT MOUSE)
 	Add large waypoint
-   Rename an existing waypoint
+	NEW Select waypoints under mouse (same as CTRL + ALT + MIDDLE MOUSE)
+	Rename an existing waypoint (same as CTRL + MIDDLE MOUSE)
 	Cancel current recording/deleting	
 	Show map data on default game minimap
-   Toggle default game minimap size
+	Toggle default game minimap size
 
 ------------------------------------------------
 Mouse buttons
-	CTRL + LEFT MOUSE				Start/end creating a new link
-	CTRL + SHIFT + LEFT MOUSE	Create a new waypoint
-	CTRL + ALT + LEFT MOUSE		Add a new comment to an existing waypoint
+	Creating...
+		CTRL + LEFT MOUSE
+			Start/end creating a new link
+		CTRL + SHIFT +	LEFT MOUSE
+			Create a new custom waypoint
+		CTRL + SHIFT + ALT + LEFT MOUSE	
+			Add a new comment to an existing waypoint
 
-	CTRL + RIGHT MOUSE			Start/end deleting an existing link
-	CTRL + SHIFT + RIGHT MOUSE	Delete an existing custom waypoint
-	CTRL + ALT + RIGHT MOUSE	Delete all comments from an existing waypoint
+	Deleting...
+		CTRL + RIGHT MOUSE
+			Start/end deleting an existing link
+		CTRL + SHIFT + RIGHT MOUSE
+			Delete an existing custom waypoint
+		CTRL + ALT + RIGHT MOUSE
+			Delete all comments from an existing waypoint
 
-	CTRL + MIDDLE MOUSE			Rename an existing waypoint
-	CTRL + MOUSE 4					Hold and drag to move an existing waypoint
+	Modifing...
+		CTRL + MIDDLE MOUSE
+			Rename an existing custom waypoint
+		CTRL + MOUSE 4
+			Hold and drag to move an existing waypoint
+
+	NEW Selecting...
+		CTRL + ALT + MIDDLE MOUSE
+			In selection mode "mouse over": toggle selection for all mouse over waypoints
+			In selection mode "start / end": set start point for selected routes
+		CTRL + ALT + LEFT MOUSE
+			In selection mode "start / end": set additional end point for selected routes
 
 ------------------------------------------------
 Slash commands
-	/sku follow		set the sku minimap to follow
-	/sku reset		reset all map data to the the default data (caution: all your work will be lost)
-	/sku export		output the map data for the text file
-	/sku import		import a text file with map data
+	/sku import	import a text file with map data
+	/sku export	output the map data for the text file
+	/sku follow	set the sku minimap to follow
+	/sku reset	reset all map data to the the default data (caution: all your work will be lost)
 	/sku version	output the addon version
 	/sku mmreset	reset the size and position of the sku minimap
 
 ------------------------------------------------
 Release notes
+
+r3
+	- Update to new map data structure and interface with named auto waypoints and layers for waypoints
 
 r2.4
 	- Updated the toc for Ulduar patch.

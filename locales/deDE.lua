@@ -637,7 +637,7 @@ L["Ping"] = "Ping"
 L["1 Meter"] = "1 Meter"
 L["2 Meter"] = "2 Meter"
 L["3 Meter"] = "3 Meter"
-L["Auto"] = "Auto"
+L["Auto"] = "auto"
 L["Klick bei Beacons"] = "Klick bei Beacons"
 L["Winkel für Klick bei Beacons"] = "Winkel für Klick bei Beacons"
 L["Ton für Klick bei Beacons"] = "Ton für Klick bei Beacons"
@@ -1638,3 +1638,4 @@ L["Minor"] = "Gering" --glyph type
 
 L["Vehicle Action Bar"] = "Fahrzeug Aktionsleiste"
 L["Stance Action Bar"] = "Haltungs Aktionsleiste"
+L["Inside"] = "Drinnen"
