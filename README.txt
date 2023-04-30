@@ -13,6 +13,7 @@ Key bindings (no default bindings, set them up via Game Settings > Interface > K
 	Cancel current recording/deleting	
 	Show map data on default game minimap
 	Toggle default game minimap size
+	Undo
 
 ------------------------------------------------
 Mouse buttons
@@ -56,6 +57,15 @@ Slash commands
 
 ------------------------------------------------
 Release notes
+
+r3.1
+	- Added a new key bind: Undo.
+		That is to reverse the last action (create/delete waypoint, link, rename, select waypoints, etc.)
+		The only exception is moving waypoints. That action can't be undone with the Undo shortcut.
+		The Undo history stores up to 100 actions. If you're doing more than 100, the oldest will be removed. 
+		The history will be cleared on logout/reload. So, you can undo 100 recent actions from the current session max.
+		It is a complex feature. I have tested it, and it seems to work. However, issues are possible. Please carefully check if it is working as intended. 
+		Please report any problem with the Undo feature asap. Thanks!
 
 r3
 	- Update to new map data structure and interface with named auto waypoints and layers for waypoints

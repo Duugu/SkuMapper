@@ -48,6 +48,25 @@ local tinsert = table.insert
 
 SkuNav.ActionsHistory = {}
 
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuTableCopy(t, deep, seen)
+	seen = seen or {}
+	if t == nil then return nil end
+	if seen[t] then return seen[t] end
+	local nt = {}
+	for k, v in pairs(t) do
+		if type(v) ~= "userdata" and k ~= "frame" and k ~= 0  then
+			if deep and type(v) == 'table' then
+				nt[k] = SkuTableCopy(v, deep, seen)
+			else
+				nt[k] = v
+			end
+		end
+	end
+	seen[t] = nt
+	return nt
+end
+
 ------------------------------------------------------------------------------------------------------------------------
 WaypointCache = {}
 WaypointCacheLookupAll = {}
@@ -465,7 +484,7 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:DeleteWpLink(aWpAName, aWpBName)
-	--print("DeleteWpLink", aWpAName, aWpBName)
+	print("DeleteWpLink", aWpAName, aWpBName)
 	local tWpAIndex = WaypointCacheLookupAll[aWpAName]
 	local tWpBIndex = WaypointCacheLookupAll[aWpBName]
 	local tWpAData = SkuNav:GetWaypointData2(nil, tWpAIndex)
@@ -615,6 +634,7 @@ function SkuNav:OnInitialize()
 	SkuNav:RegisterEvent("ZONE_CHANGED_INDOORS")
 	SkuNav:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 
+	SkuNav:History_OnInitialize()
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1382,9 +1402,18 @@ function SkuNav:OnMouseLeftUp()
 	--add selection end point
 	if IsShiftKeyDown() == false and IsAltKeyDown() == true and SkuOptions.db.profile["SkuNav"].showAdvancedControls > 0 then
 		if SkuNav.tWpEditMode == 2 then
+			local tOldTracks = SkuTableCopy(SkuNav.Tracks, true)
+			SkuNav:History_Generic("Select endpoint", function(self, aOldTracks)
+				SkuNav.Tracks = SkuTableCopy(aOldTracks, true)
+				SkuNav:RebuildTracks()
+			end,
+			tOldTracks
+			)
+
 			local tWaypointCacheId = WaypointCacheLookupAll[SkuWaypointWidgetCurrent]
 			SkuNav.Tracks.endids[#SkuNav.Tracks.endids + 1] = tWaypointCacheId
 			SkuNav:RebuildTracks()
+
 			return
 		end
 	
@@ -1403,6 +1432,8 @@ function SkuNav:OnMouseLeftUp()
 		--end
 
 		local tNewWpName = SkuNav:CreateWaypoint(nil, tWx, tWy, tWpSize, nil, nil, nil)
+		SkuNav:History_Generic("Create Waypoint", SkuNav.DeleteWaypoint, tNewWpName, nil, nil)
+		
 		if tNewWpName then
 			if SkuOptions.db.profile["SkuNav"].routeRecording == true and 
 				SkuOptions.db.profile["SkuNav"].routeRecordingLastWp and
@@ -1490,6 +1521,15 @@ function SkuNav:OnMouseRightUp()
 			if not wpObj then
 				return
 			end
+
+			--add to history
+			SkuNav:History_Generic("Delete comments", function(self, wpName, comments)
+				SkuNav:SetWaypoint(wpName, {comments = comments})
+			end,
+			SkuWaypointWidgetCurrent,
+			wpObj.comments
+			)
+			
 			SkuNav:SetWaypoint(SkuWaypointWidgetCurrent, {comments = 
 				{
 					["deDE"] = {},
@@ -1675,6 +1715,14 @@ function SkuNav:OnMouseMiddleUp()
 		
 	if IsShiftKeyDown() == false and IsAltKeyDown() == true and SkuOptions.db.profile["SkuNav"].showAdvancedControls > 0 then
 		if SkuNav.tWpEditMode == 2 then
+			local tOldTracks = SkuTableCopy(SkuNav.Tracks, true)
+			SkuNav:History_Generic("Select selection start point", function(self, aOldTracks)
+				SkuNav.Tracks = SkuTableCopy(aOldTracks, true)
+				SkuNav:RebuildTracks()
+			end,
+			tOldTracks
+			)		
+
 			local tWaypointCacheId = WaypointCacheLookupAll[SkuWaypointWidgetCurrent]
 			local tWpData = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
 			SkuNav.Tracks = {
@@ -1687,10 +1735,33 @@ function SkuNav:OnMouseMiddleUp()
 				endids = {},
 			}
 			SkuNav:RebuildTracks()
+
 			return
 
 		else
 			local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetAreaIdFromMapDropdown()))
+
+			--add to history
+			local tOldTracks = {}
+			for x = 1, #WaypointCache do
+				if WaypointCache[x].tackStep == 99999 then
+					tOldTracks[x] = true
+				end
+			end
+			SkuNav:History_Generic("Select mouseover", function(self, aOldTracks)
+				for x = 1, #WaypointCache do
+					if aOldTracks[x] == true then
+						WaypointCache[x].tackStep = 99999
+					else
+						WaypointCache[x].tackStep = nil
+					end
+				end
+				--SkuNav:RebuildTracks()
+			end,
+			tOldTracks
+			)		
+
+
 			for i, v in SkuWaypointWidgetRepoMM:EnumerateActive() do
 				if i:IsVisible() == true and _G["SkuNavMMMainFrameScrollFrame1"]:IsMouseOver() then
 					if i.aText and i.aText ~= "line" then
@@ -1710,6 +1781,7 @@ function SkuNav:OnMouseMiddleUp()
 					end
 				end
 			end
+
 			return
 		end
 	end
@@ -1832,6 +1904,26 @@ function SkuNav:UpdateWpName(aOldName, aNewName)
 				end
 				SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS = tNewenUSName
 
+
+				SkuNav:History_Generic("Rename waypoint", function(self, tOlddeDEName, tNewdeDEName, tOldenUSName, tNewenUSName)
+					if Sku.Loc == "enUS" then
+						SkuNav:UpdateWpName(tNewenUSName, tOldenUSName)
+						SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE = tOlddeDEName
+					end
+	
+					if Sku.Loc == "deDE" then
+						SkuNav:UpdateWpName(tNewdeDEName, tOlddeDEName)
+						SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS = tOldenUSName					
+					end
+					
+				end,
+				tOlddeDEName,
+				tNewdeDEName,
+				tOldenUSName, 
+				tNewenUSName
+				)
+
+
 				break
 			end
 		end
@@ -1892,6 +1984,7 @@ function SkuNav:UpdateTracksNonAutoLevel()
 	local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetAreaIdFromMapDropdown()))
 	local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetAreaIdFromMapDropdown())
 
+	local tUpdatedWaypointsForHistory = {}
 	for x = 1, #WaypointCache do
 		if WaypointCacheLookupPerContintent[tcontintentId][x] then
 			if WaypointCache[x].tackStep ~= nil then
@@ -1901,11 +1994,24 @@ function SkuNav:UpdateTracksNonAutoLevel()
 					WaypointCache[x].spawn,
 					WaypointCache[x].areaId
 				)
-
+				tUpdatedWaypointsForHistory[tUid] = SkuOptions.db.global[MODULE_NAME].WaypointLevels[tUid] or -99
 				SkuOptions.db.global[MODULE_NAME].WaypointLevels[tUid] = tLevel
 			end
 		end
 	end
+
+	SkuNav:History_Generic("Change waypoint layer value", function(self, aUpdatedWaypointsForHistory)
+		for i, v in pairs(aUpdatedWaypointsForHistory) do
+			if v == -99 then
+				SkuOptions.db.global[MODULE_NAME].WaypointLevels[i] = nil
+			else
+				SkuOptions.db.global[MODULE_NAME].WaypointLevels[i] = v
+			end
+		end
+	end,
+	tUpdatedWaypointsForHistory
+	)
+
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -1922,6 +2028,8 @@ function SkuNav:UpdateTracksNames()
 
 	local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
 	local tUiMapId = SkuNav:GetUiMapIdFromAreaId(SkuNav:GetCurrentAreaId())
+
+	local tOldNamesForHistory = {}
 
 	for x = 1, #WaypointCache do
 		if WaypointCacheLookupPerContintent[tcontintentId][x] then
@@ -1956,15 +2064,55 @@ function SkuNav:UpdateTracksNames()
 
 					local tOlddeDEName = SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE
 					local tNewdeDEName = "auto "..tAddText["deDE"]..";"..string.sub(tOlddeDEName, 6)
+					if Sku.Loc == "enUS" and SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+						tNewdeDEName = "UNTRANSLATED "..tNewdeDEName
+					end
 					SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.deDE = tNewdeDEName
 
 					local tOldenUSName = SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS
 					local tNewenUSName = "auto "..tAddText["enUS"]..";"..string.sub(tOldenUSName, 6)
+					if Sku.Loc == "deDE" and SkuOptions.db.profile["SkuNav"].showAdvancedControls < 2 then
+						tNewenUSName = "UNTRANSLATED "..tNewenUSName
+					end
 					SkuOptions.db.global[MODULE_NAME].Waypoints[WaypointCache[x].dbIndex].names.enUS = tNewenUSName
+
+					--for history
+					tOldNamesForHistory[WaypointCache[x].dbIndex] = {
+						tOlddeDEName = tOlddeDEName,
+						tNewdeDEName = tNewdeDEName,
+						tOldenUSName = tOldenUSName,
+						tNewenUSName = tNewenUSName,
+					}
+
 				end
 			end
 		end
 	end
+
+
+	--add to history
+	SkuNav:History_Generic("Add custom prefix", function(self, aOldNamesForHistory)
+		for i, v in pairs(aOldNamesForHistory) do
+			if Sku.Loc == "enUS" then
+				SkuNav:UpdateWpName(v.tNewenUSName, v.tOldenUSName)
+				SkuOptions.db.global[MODULE_NAME].Waypoints[i].names.deDE = v.tOlddeDEName
+			end
+
+			if Sku.Loc == "deDE" then
+				SkuNav:UpdateWpName(v.tNewdeDEName, v.tOlddeDEName)
+				SkuOptions.db.global[MODULE_NAME].Waypoints[i].names.enUS = v.tOldenUSName
+			end
+		end
+	end,
+	tOldNamesForHistory
+	)
+
+
+
+
+
+
+	
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -2480,31 +2628,39 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint, aSilent)
 		print("Error: waypoint nil in db")
 		SkuNav:PlayFailSound()
 	else
-		--remove from links db
 
+
+		--remove from links db
 		--remove links in linked wps in cache
-		if tWpData.links.byId then
-			for index, distance in pairs(tWpData.links.byId) do
-				WaypointCache[index].links.byId[tCacheIndex] = nil
-				WaypointCache[index].links.byName[aWpName] = nil
-				--and in options links
-				local tCacheLinksId = SkuNav:BuildWpIdFromData(WaypointCache[index].typeId, WaypointCache[index].dbIndex, WaypointCache[index].spawn, WaypointCache[index].areaId)
-				local tLinksId = SkuNav:BuildWpIdFromData(WaypointCache[tCacheIndex].typeId, WaypointCache[tCacheIndex].dbIndex, WaypointCache[tCacheIndex].spawn, WaypointCache[tCacheIndex].areaId)
-				SkuOptions.db.global[MODULE_NAME].Links[tCacheLinksId][tLinksId] = nil
-			end
-		end
+		local tLinkNames = {}
 		if tWpData.links.byName then
 			for name, distance in pairs(tWpData.links.byName) do
-				local tCacheLinksId = SkuNav:BuildWpIdFromData(WaypointCache[WaypointCacheLookupAll[name]].typeId, WaypointCache[WaypointCacheLookupAll[name]].dbIndex, WaypointCache[WaypointCacheLookupAll[name]].spawn, WaypointCache[WaypointCacheLookupAll[name]].areaId)
-				local tLinksId = SkuNav:BuildWpIdFromData(WaypointCache[tCacheIndex].typeId, WaypointCache[tCacheIndex].dbIndex, WaypointCache[tCacheIndex].spawn, WaypointCache[tCacheIndex].areaId)
-				
-				SkuOptions.db.global[MODULE_NAME].Links[tCacheLinksId][tLinksId] = nil
-
-				WaypointCache[WaypointCacheLookupAll[aWpName]].links.byId[tCacheIndex] = nil
-				WaypointCache[WaypointCacheLookupAll[aWpName]].links.byName[aWpName] = nil
-
+				tLinkNames[#tLinkNames + 1] = name
 			end
 		end
+		for x = 1, #tLinkNames do
+			SkuNav:DeleteWpLink(aWpName, tLinkNames[x])
+		end
+
+		--add to history
+		SkuNav:History_Generic("Delete waypoint", function(self, tWpData, uid, aWpName, tCacheIndex, dbData)
+			WaypointCache[tCacheIndex] = tWpData	
+			WaypointCacheLookupIdForCacheIndex[uid] = tCacheIndex
+			WaypointCacheLookupCacheNameForId[aWpName] = uid
+			WaypointCacheLookupPerContintent[tWpData.contintentId][tCacheIndex] = aWpName
+			WaypointCacheLookupAll[aWpName] = tCacheIndex
+			WaypointCache[tCacheIndex] = tWpData
+			SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] = dbData
+			SkuNav:SaveLinkDataToProfile()
+		end,
+		tWpData,
+		SkuNav:BuildWpIdFromData(WaypointCache[tCacheIndex].typeId, WaypointCache[tCacheIndex].dbIndex, WaypointCache[tCacheIndex].spawn, WaypointCache[tCacheIndex].areaId),
+		aWpName,
+		tCacheIndex,
+		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex]
+		)
+
+
 
 		WaypointCacheLookupIdForCacheIndex[SkuNav:BuildWpIdFromData(WaypointCache[tCacheIndex].typeId, WaypointCache[tCacheIndex].dbIndex, WaypointCache[tCacheIndex].spawn, WaypointCache[tCacheIndex].areaId)] = nil
 		WaypointCacheLookupCacheNameForId[aWpName] = nil
@@ -2722,6 +2878,7 @@ function SkuNav:UpdateAutoName(aOldName, aNewName)
 	--create aNewName
 	SkuNav:CreateWaypoint(aNewName, tWpData.worldX, tWpData.worldY, tWpData.size, nil, nil, true, nil, true)
 	SkuNav:SetWaypoint(aNewName, tWpData)
+	SkuNav:History_Generic("Update Auto Name", SkuNav.DeleteWaypoint, aNewName, nil, nil)
 
 	--create links
 	for name, distance in pairs(tLinks) do

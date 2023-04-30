@@ -573,6 +573,23 @@ function SkuOptions:AddCommentToWp(aName)
 				end
 
 				SkuNav:SetWaypoint(aName, tWpData)
+
+				--history
+				SkuNav:History_Generic(function(self, aName, aCommenIndex)
+					local tWpData = SkuNav:GetWaypointData2(aName)
+					table.remove(tWpData.comments[Sku.Loc], aCommenIndex)
+					for i, v in pairs(Sku.Locs) do
+						if v ~= Sku.Loc then
+							table.remove(tWpData.comments[v], aCommenIndex)
+						end
+					end
+					SkuNav:SetWaypoint(aName, tWpData)
+				end,
+				aName,
+				#tWpData.comments[Sku.Loc]
+				)
+				
+		
 				SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 				print("Comment added", tText)
 			else

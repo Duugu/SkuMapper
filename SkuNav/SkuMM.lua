@@ -1478,6 +1478,28 @@ function SkuNav:SkuNavMMOpen()
 				tButtonObj:SetScript("OnMouseUp", function(self, button)
 					local tcontintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
 
+					local tOldTracksa = SkuTableCopy(SkuNav.Tracks, true)
+					local tOldTracksb = {}
+					for x = 1, #WaypointCache do
+						if WaypointCache[x].tackStep == 99999 then
+							tOldTracksb[x] = true
+						end
+					end
+					SkuNav:History_Generic("Clear selection", function(self, aOldTracksa, aOldTracksb)
+						for x = 1, #WaypointCache do
+							if aOldTracksb[x] == true then
+								WaypointCache[x].tackStep = 99999
+							else
+								WaypointCache[x].tackStep = nil
+							end
+						end
+						SkuNav.Tracks = SkuTableCopy(aOldTracksa, true)
+						SkuNav:RebuildTracks()						
+					end,
+					tOldTracksa, tOldTracksb
+					)		
+
+
 					SkuNav.Tracks = {
 						startid = nil,
 						endids = {},

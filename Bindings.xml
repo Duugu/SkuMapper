@@ -24,6 +24,8 @@
       local tWpSize = 1
    
 		local tNewWpName = SkuNav:CreateWaypoint(nil, nil, nil, tWpSize, nil, nil, true)
+		SkuNav:History_Generic("Create normal waypoint", SkuNav.DeleteWaypoint, tNewWpName, nil, nil)
+
       if SkuOptions.db.profile["SkuNav"].routeRecording == true and 
          SkuOptions.db.profile["SkuNav"].routeRecordingLastWp and
          SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true
@@ -51,6 +53,7 @@
       local tWpSize = 5
       
 		local tNewWpName = SkuNav:CreateWaypoint(nil, nil, nil, tWpSize, nil, nil, true)
+		SkuNav:History_Generic("Create large waypoint", SkuNav.DeleteWaypoint, tNewWpName, nil, nil)
       if SkuOptions.db.profile["SkuNav"].routeRecording == true and 
          SkuOptions.db.profile["SkuNav"].routeRecordingLastWp and
          SkuOptions.db.profile["SkuNav"].routeRecordingDelete ~= true
@@ -88,6 +91,16 @@
 				endids = {},
 			}
 			SkuNav:RebuildTracks()
+
+			local tOldTracks = SkuNav.Tracks
+			SkuNav:History_Generic("Select mouseover waypoints", function(self, aOldTracks)
+				print("aTracks", aOldTracks)
+				SkuNav.Tracks = aOldTracks
+				SkuNav:RebuildTracks()
+			end,
+			tOldTracks
+			)		
+
 			return
 
 		else
@@ -159,4 +172,8 @@
          MinimapCluster:SetScale(1)
       end   
    </Binding>
+   <Binding name="Undo">
+		SkuNav:History_Undo()
+   </Binding>
+	
 </Bindings>
