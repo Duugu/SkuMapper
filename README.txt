@@ -5,15 +5,16 @@ For more information join the Sku Discord server: https://discord.gg/FsfKeqxZV4
 
 ------------------------------------------------
 Key bindings (no default bindings, set them up via Game Settings > Interface > Key bindings > Other)
-	Open Sku minimap
-	Add normal waypoint (same as CTRL + LEFT MOUSE)
-	Add large waypoint
-	NEW Select waypoints under mouse (same as CTRL + ALT + MIDDLE MOUSE)
-	Rename an existing waypoint (same as CTRL + MIDDLE MOUSE)
-	Cancel current recording/deleting	
-	Show map data on default game minimap
-	Toggle default game minimap size
-	Undo
+	- Open Sku minimap
+	- Add normal waypoint (same as CTRL + LEFT MOUSE)
+	- Add large waypoint
+	- NEW Select waypoints under mouse (same as CTRL + ALT + MIDDLE MOUSE)
+	- Rename an existing waypoint (same as CTRL + MIDDLE MOUSE)
+	- Cancel current recording/deleting	
+	- Show map data on default game minimap
+	- Toggle default game minimap size
+	- Undo
+	- Unselect waypoints
 
 ------------------------------------------------
 Mouse buttons
@@ -39,7 +40,7 @@ Mouse buttons
 		CTRL + MOUSE 4
 			Hold and drag to move an existing waypoint
 
-	NEW Selecting...
+	Selecting...
 		CTRL + ALT + MIDDLE MOUSE
 			In selection mode "mouse over": toggle selection for all mouse over waypoints
 			In selection mode "start / end": set start point for selected routes
@@ -48,15 +49,20 @@ Mouse buttons
 
 ------------------------------------------------
 Slash commands
-	/sku import	import a text file with map data
-	/sku export	output the map data for the text file
-	/sku follow	set the sku minimap to follow
-	/sku reset	reset all map data to the the default data (caution: all your work will be lost)
+	/sku import		import a text file with map data
+	/sku export		output the map data for the text file
+	/sku follow		set the sku minimap to follow
+	/sku reset		reset all map data to the the default data (caution: all your work will be lost)
 	/sku version	output the addon version
 	/sku mmreset	reset the size and position of the sku minimap
 
 ------------------------------------------------
 Release notes
+
+r3.2
+	- Added a new key bind: Unselect waypoints
+	- Tried to fix an issue with hyphens not working for filter terms
+	- Fixed a bunch of errors with deselecting waypoints that could lead to lua errors
 
 r3.1
 	- Added a new key bind: Undo.

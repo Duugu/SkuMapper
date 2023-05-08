@@ -1744,7 +1744,7 @@ function SkuNav:OnMouseMiddleUp()
 			--add to history
 			local tOldTracks = {}
 			for x = 1, #WaypointCache do
-				if WaypointCache[x].tackStep == 99999 then
+				if WaypointCache[x] and WaypointCache[x].tackStep == 99999 then
 					tOldTracks[x] = true
 				end
 			end

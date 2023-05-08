@@ -1,3 +1,5 @@
+--/script SkuOptions.db.profile["SkuNav"].showAdvancedControls = 2
+
 ---@diagnostic disable: undefined-field, undefined-doc-name
 ---------------------------------------------------------------------------------------------------------------------------------------
 local MODULE_NAME = "SkuNav"
@@ -1170,11 +1172,16 @@ function SkuNav:SkuNavMMOpen()
 			eb:SetFontObject("ChatFontSmall")
 			eb:SetScript("OnEscapePressed", function(self) 
 				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
+				SkuOptions.db.profile["SkuNav"].waypointFilterString = string.gsub(SkuOptions.db.profile["SkuNav"].waypointFilterString, "%-", "%%%-")
+
 				self:ClearFocus()
 				PlaySound(89)
 			end)
 			eb:SetScript("OnEnterPressed", function(self) 
 				SkuOptions.db.profile["SkuNav"].waypointFilterString = self:GetText()
+				SkuOptions.db.profile["SkuNav"].waypointFilterString = string.gsub(SkuOptions.db.profile["SkuNav"].waypointFilterString, "%-", "%%%-")
+
+
 				self:ClearFocus()
 				PlaySound(89)
 			end)
@@ -1481,7 +1488,7 @@ function SkuNav:SkuNavMMOpen()
 					local tOldTracksa = SkuTableCopy(SkuNav.Tracks, true)
 					local tOldTracksb = {}
 					for x = 1, #WaypointCache do
-						if WaypointCache[x].tackStep == 99999 then
+						if WaypointCache[x] and WaypointCache[x].tackStep and WaypointCache[x].tackStep == 99999 then
 							tOldTracksb[x] = true
 						end
 					end
