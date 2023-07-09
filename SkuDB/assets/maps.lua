@@ -221,8 +221,8 @@ SkuDB.ExternalMapID = { --https://wow.tools/dbc/?dbc=uimap&build=1.13.7.38386&lo
 [227] = {Name_lang = {["deDE"] = "Neu-Tüftlerstadt", ["enUS"] = "Gnomeregan",}, ParentExternalMapID = "1426", Type = "4", AreaId = 133,},
 [228] = {Name_lang = {["deDE"] = "Neu-Tüftlerstadt", ["enUS"] = "Gnomeregan",}, ParentExternalMapID = "1426", Type = "4", AreaId = 133,},
 [229] = {Name_lang = {["deDE"] = "Neu-Tüftlerstadt", ["enUS"] = "Gnomeregan",}, ParentExternalMapID = "1426", Type = "4", AreaId = 133,},
-[230] = {Name_lang = {["deDE"] = "Uldaman", ["enUS"] = "Uldaman",}, ParentExternalMapID = "1418", Type = "4", AreaId = 1337,},
-[231] = {Name_lang = {["deDE"] = "Uldaman", ["enUS"] = "Uldaman",}, ParentExternalMapID = "1418", Type = "4", AreaId = 1337,},
+[230] = {Name_lang = {["deDE"] = "Uldaman", ["enUS"] = "Uldaman",}, ParentExternalMapID = "1418", Type = "4", AreaId = 1517,},
+[231] = {Name_lang = {["deDE"] = "Uldaman", ["enUS"] = "Uldaman",}, ParentExternalMapID = "1418", Type = "4", AreaId = 1517,},
 [232] = {Name_lang = {["deDE"] = "Geschmolzener Kern", ["enUS"] = "Molten Core",}, ParentExternalMapID = "1428", Type = "4", AreaId = 2717,},
 [233] = {Name_lang = {["deDE"] = "Zul'Gurub", ["enUS"] = "Zul'Gurub",}, ParentExternalMapID = "1434", Type = "6", AreaId = 19,},
 [234] = {Name_lang = {["deDE"] = "Düsterbruch", ["enUS"] = "Dire Maul",}, ParentExternalMapID = "1444", Type = "6", AreaId = 2557,},
@@ -1303,7 +1303,7 @@ SkuDB.InternalAreaTable = {
 --[2372] = {ZoneName = "Hillsbrad Fields", AreaName_lang = {["deDE"] = "Die Felder des Hügellands", ["enUS"] = "Hillsbrad Fields", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
 --[2373] = {ZoneName = "EasternStrand", AreaName_lang = {["deDE"] = "Oststrand", ["enUS"] = "Eastern Strand", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
 --[2374] = {ZoneName = "NethanderStead", AreaName_lang = {["deDE"] = "Nethandersiedlung", ["enUS"] = "Nethander Stead", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
---[2375] = {ZoneName = "DarrowHill", AreaName_lang = {["deDE"] = "Darrohügel", ["enUS"] = "Darrow Hill", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
+--[2375] = {ZoneName = "DarrowHill", AreaName_lang = {["deDE"] = "Darrohügel", ["enUS"] = "Darrow Hill", }, Continent1377ID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
 --[2376] = {ZoneName = "SouthpointTower", AreaName_lang = {["deDE"] = "Südwachtturm", ["enUS"] = "Southpoint Tower", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
 --[2377] = {ZoneName = "Thoradin'sWall", AreaName_lang = {["deDE"] = "Thoradinswall", ["enUS"] = "Thoradin's Wall", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
 --[2378] = {ZoneName = "WesternStrand", AreaName_lang = {["deDE"] = "Weststrand", ["enUS"] = "Western Strand", }, ContinentID = 560, ParentAreaID = 2367, Faction = 0, Flags = 1073741824,},
@@ -1514,7 +1514,7 @@ SkuDB.InternalAreaTable = {
 [3475] = {ZoneName = "Zeb'Watha", AreaName_lang = {["deDE"] = "Zeb'Watha", ["enUS"] = "Zeb'Watha", }, ContinentID = 530, ParentAreaID = 3430, Faction = 0, Flags = 1073741888,},
 [3476] = {ZoneName = "Tor'Watha", AreaName_lang = {["deDE"] = "Tor'Watha", ["enUS"] = "Tor'Watha", }, ContinentID = 530, ParentAreaID = 3430, Faction = 0, Flags = 1073741888,},
 [3477] = {ZoneName = "AzjolNerub", AreaName_lang = {["deDE"] = "Azjol-Nerub", ["enUS"] = "Azjol-Nerub", }, ContinentID = 571, ParentAreaID = 0, Faction = 0, Flags = 17408,},
---[3478] = {ZoneName = "GatesofAhn'Qiraj", AreaName_lang = {["deDE"] = "Tore von Ahn'Qiraj", ["enUS"] = "Gates of Ahn'Qiraj", }, ContinentID = 1, ParentAreaID = 0, Faction = 0, Flags = 0,},
+[3478] = {ZoneName = "GatesofAhn'Qiraj", AreaName_lang = {["deDE"] = "Tore von Ahn'Qiraj", ["enUS"] = "Gates of Ahn'Qiraj", }, ContinentID = 1, ParentAreaID = 1377, Faction = 0, Flags = 0,},
 [3479] = {ZoneName = "TheGreatSeaDraeneiIsles", AreaName_lang = {["deDE"] = "Das Verhüllte Meer", ["enUS"] = "The Veiled Sea", }, ContinentID = 530, ParentAreaID = 3524, Faction = 2, Flags = 1073741888,},
 [3480] = {ZoneName = "DuskwitherGrounds", AreaName_lang = {["deDE"] = "Nachtschimmergrund", ["enUS"] = "Duskwither Grounds", }, ContinentID = 530, ParentAreaID = 3430, Faction = 0, Flags = 1073741888,},
 [3481] = {ZoneName = "DuskwitherSpire", AreaName_lang = {["deDE"] = "Nachtschimmerturm", ["enUS"] = "Duskwither Spire", }, ContinentID = 530, ParentAreaID = 3430, Faction = 0, Flags = 1073741888,},
@@ -3322,4 +3322,12 @@ SkuDB.InternalAreaTable = {
 
 --Sku fake subzone entries
 [250000] = {ZoneName = "", AreaName_lang = {["deDE"] = "Versteck der Defias", ["enUS"] = "Defias hideout", }, ContinentID = 0, ParentAreaID = 20, Faction = -1, Flags = -1,},
+[250001] = {ZoneName = "", AreaName_lang = {["deDE"] = "Südliche Bankenhalle", ["enUS"] = "South Common Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
+[250002] = {ZoneName = "", AreaName_lang = {["deDE"] = "Ausgrabungszentrum", ["enUS"] = "Excavation Center", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
+[250003] = {ZoneName = "", AreaName_lang = {["deDE"] = "Grabungs Eins", ["enUS"] = "Dig One", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
+[250004] = {ZoneName = "", AreaName_lang = {["deDE"] = "Nördliche Bankenhalle", ["enUS"] = "North Common Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
+[250005] = {ZoneName = "", AreaName_lang = {["deDE"] = "Die versiegelte Halle", ["enUS"] = "The Sealed Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
+
+
+
 }

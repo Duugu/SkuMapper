@@ -1,5 +1,5 @@
 <Bindings>
-   <Binding name="Open Sku Minimap" header="SKUMAPPERKEYBINDHEADER">
+   <Binding name="Open Sku Minimap">
 		if _G["SkuNavZoneSelector"] and _G["SkuNavZoneSelector"]:IsShown() == true then
 			print("not possible. zone selector open.")
          SkuNav:PlayFailSound()

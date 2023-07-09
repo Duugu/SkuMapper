@@ -59,6 +59,9 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r3.3
+	- Fixed an issue with the new Blizzard options panel and key bindings.
+
 r3.2
 	- Added a new key bind: Unselect waypoints
 	- Tried to fix an issue with hyphens not working for filter terms

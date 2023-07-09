@@ -1,9 +1,10 @@
-## Interface: 30401
-## Interface-Wrath: 30401
-## Title: SkuMapper (3.2)
+## Interface: 30402
+## Interface-Wrath: 30402
+## Title: SkuMapper (3.3)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
-## Version: 3.2
+## Version: 3.3
+## X-Curse-Project-ID: 
 
 Bindings.xml
 embeds.xml
