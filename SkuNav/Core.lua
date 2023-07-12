@@ -273,7 +273,7 @@ function SkuNav:CreateWaypointCache(aAddLocalizedNames)
 											uiMapId = isUiMap,
 											worldX = tWaypointData.worldX,
 											worldY = tWaypointData.worldY,
-											createdAt = tWaypointData.createdAt,
+											createdAt = GetTime(),--tWaypointData.createdAt,
 											createdBy = tWaypointData.createdBy,
 											size = tWaypointData.size or 1,
 											comments = tWaypointData.lComments or {["deDE"] = {},["enUS"] = {},},
@@ -2490,7 +2490,7 @@ function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
 	WaypointCache[tWpIndex].uiMapId = SkuNav:GetUiMapIdFromAreaId(aData.areaId) or WaypointCache[tWpIndex].uiMapId
 	WaypointCache[tWpIndex].worldX = aData.worldX or WaypointCache[tWpIndex].worldX
 	WaypointCache[tWpIndex].worldY = aData.worldY or WaypointCache[tWpIndex].worldY
-	WaypointCache[tWpIndex].createdAt = aData.createdAt or WaypointCache[tWpIndex].createdAt or 0
+	WaypointCache[tWpIndex].createdAt = GetTime()--aData.createdAt or WaypointCache[tWpIndex].createdAt or 0
 	WaypointCache[tWpIndex].createdBy = aData.createdBy or WaypointCache[tWpIndex].createdBy or "SkuNav"
 	WaypointCache[tWpIndex].size = aData.size or WaypointCache[tWpIndex].size or 1
 	WaypointCache[tWpIndex].comments = aData.comments or WaypointCache[tWpIndex].comments or {
@@ -2516,7 +2516,7 @@ function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
 			["areaId"] = WaypointCache[tWpIndex].areaId,
 			["worldX"] = WaypointCache[tWpIndex].worldX,
 			["worldY"] = WaypointCache[tWpIndex].worldY,
-			["createdAt"] = WaypointCache[tWpIndex].createdAt,
+			["createdAt"] = GetTime(),--WaypointCache[tWpIndex].createdAt,
 			["createdBy"] = WaypointCache[tWpIndex].createdBy,
 			["size"] = WaypointCache[tWpIndex].size,
 			["lComments"] = {
@@ -2547,7 +2547,7 @@ function SkuNav:SetWaypoint(aName, aData, aIsTempWaypoint)
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["areaId"] = WaypointCache[tWpIndex].areaId
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["worldX"] = WaypointCache[tWpIndex].worldX
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["worldY"] = WaypointCache[tWpIndex].worldY
-		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["createdAt"] = WaypointCache[tWpIndex].createdAt
+		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["createdAt"] = GetTime()--WaypointCache[tWpIndex].createdAt
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["createdBy"] = WaypointCache[tWpIndex].createdBy
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["size"] = WaypointCache[tWpIndex].size
 		SkuOptions.db.global[MODULE_NAME].Waypoints[tWpId]["lComments"] = WaypointCache[tWpIndex].comments

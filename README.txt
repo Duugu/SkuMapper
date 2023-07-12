@@ -61,6 +61,7 @@ Release notes
 
 r3.3
 	- Fixed an issue with the new Blizzard options panel and key bindings.
+	- Changed the map file format.
 
 r3.2
 	- Added a new key bind: Unselect waypoints

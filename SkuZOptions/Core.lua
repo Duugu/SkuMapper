@@ -505,6 +505,7 @@ function SkuOptions:ExportWpAndLinkData()
 		local tWpData = SkuOptions.db.global["SkuNav"].Waypoints[i]
 		if tWpData then
 			tWpData.comments = nil
+			tWpData.createdAt = nil
 			table.insert(tExportDataTable.waypoints, tWpData)
 		end
 	end
