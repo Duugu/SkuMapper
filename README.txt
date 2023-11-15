@@ -59,6 +59,9 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r3.4
+	- Added a bunch of missing creature, quest, item, and object data for phase 3 & 4 from Questie.
+
 r3.3
 	- Fixed an issue with the new Blizzard options panel and key bindings.
 	- Changed the map file format.
