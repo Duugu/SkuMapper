@@ -361,6 +361,10 @@ local tContintentIdDataSubstrings = {
 	[530] = "expansion01",
 	[571] = "northrend",
 	[609] = "azeroth",
+	[646] = "deephome",
+	[730] = "maelstromzone",
+	[648] = "lostisles",
+	[728] = "thebattleforgilneas",
 }
 local currentContinentId
 local function SkuNavMMUpdateContent()
