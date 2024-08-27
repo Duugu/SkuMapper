@@ -363,8 +363,8 @@ local tContinentIdToFolderName = {
 	[530] = "expansion01",
 	[571] = "northrend",
 	[609] = "azeroth",
-	[646] = "deepholme",
-	[730] = "maelstrom",
+	[646] = "deephome",
+	[730] = "maelstromzone",
 	[648] = "lostisles",
 	[728] = "thebattleforgilneas",
 }
@@ -375,9 +375,6 @@ local function SkuNavMMUpdateContent()
 	if currentContinentId ~= tPlayerContinentID then
 		currentContinentId = tPlayerContinentID
 		local folderName = tContinentIdToFolderName[currentContinentId]
-
-		print(folderName)
-		print(currentContinentId)
 
 		if folderName then
 			for tx = 1, 63, 1 do
