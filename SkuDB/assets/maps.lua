@@ -4431,7 +4431,4 @@ SkuDB.InternalAreaTable = {
     [250003] = {ZoneName = "", AreaName_lang = {["deDE"] = "Grabungs Eins", ["enUS"] = "Dig One", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
     [250004] = {ZoneName = "", AreaName_lang = {["deDE"] = "Nördliche Bankenhalle", ["enUS"] = "North Common Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
     [250005] = {ZoneName = "", AreaName_lang = {["deDE"] = "Die versiegelte Halle", ["enUS"] = "The Sealed Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
-
-
-
 }
