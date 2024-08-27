@@ -8,6 +8,8 @@ SkuDB.ContinentIds = {
     [730] = {Name_lang = {["deDE"] = "The Maelstrom", ["enUS"] = "The Maelstrom",},}, 
     [648] = {Name_lang = {["deDE"] = "lostisles", ["enUS"] = "lostisles",},}, 
     [728] = {Name_lang = {["deDE"] = "thebattleforgilneas", ["enUS"] = "thebattleforgilneas",},}, 
+    [654] = {Name_lang = {["deDE"] = "gilneas2", ["enUS"] = "gilneas2",},}, 
+    [2755] = {Name_lang = {["deDE"] = "Der Kampf um Tol Barad", ["enUS"] = "Battle for Tol Barad",},}, 
 }
 
 SkuDB.zoneIDs = {

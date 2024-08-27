@@ -367,11 +367,13 @@ local tContinentIdToFolderName = {
 	[730] = "maelstromzone",
 	[648] = "lostisles",
 	[728] = "thebattleforgilneas",
+	[654] = "gilneas2",
+	[2755] = "tolbarad",
 }
 local currentContinentId
 local function SkuNavMMUpdateContent()
 	local _, _, tPlayerContinentID  = SkuNav:GetAreaData(SkuNav:GetCurrentAreaId())
-	
+	print(tPlayerContinentID)
 	if currentContinentId ~= tPlayerContinentID then
 		currentContinentId = tPlayerContinentID
 		local folderName = tContinentIdToFolderName[currentContinentId]
