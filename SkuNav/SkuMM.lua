@@ -354,24 +354,36 @@ function SkuNavDrawLine(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, prt, linefram
 	--return lineframe
 end
 
-local tContintentIdDataSubstrings = {
+------------------------------------------------------------------------------------------------------------------------
+
+local tContinentIdToFolderName = {
 	[0] = "azeroth",
 	[1] = "kalimdor",
 	[369] = "",
 	[530] = "expansion01",
 	[571] = "northrend",
 	[609] = "azeroth",
+	[646] = "deepholme",
+	[730] = "maelstrom",
+	[648] = "lostisles",
+	[728] = "thebattleforgilneas",
 }
 local currentContinentId
 local function SkuNavMMUpdateContent()
 	local _, _, tPlayerContinentID  = SkuNav:GetAreaData(SkuNav:GetCurrentAreaId())
+	
 	if currentContinentId ~= tPlayerContinentID then
 		currentContinentId = tPlayerContinentID
-		if tContintentIdDataSubstrings[currentContinentId] then
+		local folderName = tContinentIdToFolderName[currentContinentId]
+
+		print(folderName)
+		print(currentContinentId)
+
+		if folderName then
 			for tx = 1, 63, 1 do
 				local tPrevFrame
 				for ty = 1, 63, 1 do
-					_G["SkuMapTile_"..tx.."_"..ty].mapTile:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\MinimapData\\"..tContintentIdDataSubstrings[currentContinentId].."\\map"..(tx - 1).."_"..(64 - (ty - 1))..".blp")
+					_G["SkuMapTile_"..tx.."_"..ty].mapTile:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\MinimapData\\"..folderName.."\\map"..(tx - 1).."_"..(64 - (ty - 1))..".blp")
 				end
 			end
 		end
