@@ -1,5 +1,4 @@
-## Interface: 30402
-## Interface-Wrath: 30403
+## Interface: 40401
 ## Title: SkuMapper (3.4)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
