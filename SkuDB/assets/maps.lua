@@ -1,15 +1,13 @@
 SkuDB.ContinentIds = {
     [0] = {Name_lang = {["deDE"] = "Östliche Königreiche", ["enUS"] = "Eastern Kingdoms",},},
-    [1] = {Name_lang =  {["deDE"] = "Kalimdor", ["enUS"] = "Kalimdor",},}, --"Kalimdor"
+    [1] = {Name_lang =  {["deDE"] = "Kalimdor", ["enUS"] = "Kalimdor",},}, --"Kalimdor"},
     [530] = {Name_lang =  {["deDE"] = "Scherbenwelt", ["enUS"] = "Outland",},},
     [571] = {Name_lang =  {["deDE"] = "Nordrend", ["enUS"] = "Northrend",},}, 
-    [609] = {Name_lang = {["deDE"] = "Östliche Königreiche", ["enUS"] = "Eastern Kingdoms",},}, --this is for the DK phasing zone
+    [609] = {Name_lang = {["deDE"] = "Östliche Königreiche", ["enUS"] = "Eastern Kingdoms",},}, --this is for the DK phasing zone},
     [646] = {Name_lang = {["deDE"] = "Tiefenheim", ["enUS"] = "Deepholme",},}, 
     [730] = {Name_lang = {["deDE"] = "The Maelstrom", ["enUS"] = "The Maelstrom",},}, 
     [648] = {Name_lang = {["deDE"] = "lostisles", ["enUS"] = "lostisles",},}, 
     [728] = {Name_lang = {["deDE"] = "thebattleforgilneas", ["enUS"] = "thebattleforgilneas",},}, 
-    [654] = {Name_lang = {["deDE"] = "gilneas2", ["enUS"] = "gilneas2",},}, 
-    [2755] = {Name_lang = {["deDE"] = "Der Kampf um Tol Barad", ["enUS"] = "Battle for Tol Barad",},}, 
 }
 
 SkuDB.zoneIDs = {
@@ -235,7 +233,7 @@ SkuDB.zoneIDs = {
     DARKMOON_FAIRE_ISLAND = 5861,
 }
 
-SkuDB.ExternalMapID = { --https://wow.tools/dbc/?dbc=uimap&build=1.13.7.38386&locale=deDE#page=1
+SkuDB.ExternalMapID = loadstring([[return { --https://wow.tools/dbc/?dbc=uimap&build=1.13.7.38386&locale=deDE#page=1
 [86] = {Name_lang = {["deDE"] = "Orgrimmar", ["enUS"] = "Orgrimmar",}, ParentExternalMapID = "1454", Type = "6", AreaId = 1637,},
 [113] = {Name_lang = {["deDE"] = "Nordend", ["enUS"] = "Northrend",}, ParentExternalMapID = "947", Type = "2", AreaId = -1,},
 [114] = {Name_lang = {["deDE"] = "Boreanische Tundra", ["enUS"] = "Borean Tundra",}, ParentExternalMapID = "113", Type = "3", AreaId = 3537,},
@@ -574,9 +572,9 @@ SkuDB.ExternalMapID = { --https://wow.tools/dbc/?dbc=uimap&build=1.13.7.38386&lo
 [2340] = {Name_lang = {["deDE"] = "Tol Barad", ["enUS"] = "Tol Barad",}, ParentExternalMapID = "947", Type = "3", AreaId = 5095,},
 
 
-}
+}]])()
  
-SkuDB.InternalAreaTable = {
+SkuDB.InternalAreaTable = loadstring([[return {
     [1] = {ZoneName = "DunMorogh", AreaName_lang = {["deDE"] = "Dun Morogh", ["enUS"] = "Dun Morogh", }, ContinentID = 0, ParentAreaID = 0, Faction = -1, Flags = 16449,},
     [2] = {ZoneName = "Longshore", AreaName_lang = {["deDE"] = "Die Endlose Küste", ["enUS"] = "Longshore", }, ContinentID = 0, ParentAreaID = 40, Faction = -1, Flags = 1073758272,},
     [3] = {ZoneName = "Badlands", AreaName_lang = {["deDE"] = "Ödland", ["enUS"] = "Badlands", }, ContinentID = 0, ParentAreaID = 0, Faction = -1, Flags = 16448,},
@@ -4433,4 +4431,7 @@ SkuDB.InternalAreaTable = {
     [250003] = {ZoneName = "", AreaName_lang = {["deDE"] = "Grabungs Eins", ["enUS"] = "Dig One", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
     [250004] = {ZoneName = "", AreaName_lang = {["deDE"] = "Nördliche Bankenhalle", ["enUS"] = "North Common Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
     [250005] = {ZoneName = "", AreaName_lang = {["deDE"] = "Die versiegelte Halle", ["enUS"] = "The Sealed Hall", }, ContinentID = 0, ParentAreaID = 1517, Faction = -1, Flags = -1,},
-}
+
+
+
+}]])()
