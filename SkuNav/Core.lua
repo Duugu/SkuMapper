@@ -786,7 +786,7 @@ function SkuNav:GetCurrentAreaId(aUnitId)
 	local tAreaId
 
 	for i, v in pairs(SkuDB.InternalAreaTable) do
-		if (v.AreaName_lang[Sku.Loc] == tMinimapZoneText)  and (SkuNav:GetUiMapIdFromAreaId(i) == tPlayerUIMap) then
+		if (v.AreaName_lang[Sku.Loc] == tMinimapZoneText) and v.ParentAreaID == C_Map.GetBestMapForUnit("player") and (SkuNav:GetUiMapIdFromAreaId(i) == tPlayerUIMap) then
 			tAreaId = i
 			break
 		end

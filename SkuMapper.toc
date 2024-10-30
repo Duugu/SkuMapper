@@ -1,5 +1,4 @@
-## Interface: 30402
-## Interface-Wrath: 30403
+## Interface: 40401
 ## Title: SkuMapper (3.4)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
@@ -22,24 +21,13 @@ SkuDB\Core.lua
 SkuDB\assets\maps.lua
 SkuDB\assets\default_waypoints.lua
 SkuDB\assets\quests.lua
-SkuDB\assets\quests_fixes.lua
 SkuDB\assets\creatures.lua
-SkuDB\assets\creatures_fixes.lua
 SkuDB\assets\items.lua
-SkuDB\assets\items_fixes.lua
 SkuDB\assets\objects.lua
-SkuDB\assets\objects_fixes.lua
 SkuDB\assets\spells.lua
 SkuDB\assets\polygons.lua
 
-SkuDB\assets\WotLK\quests.lua
-SkuDB\assets\WotLK\quests_fixes.lua
-SkuDB\assets\WotLK\creatures.lua
-SkuDB\assets\WotLK\creatures_fixes.lua
-SkuDB\assets\WotLK\items.lua
-SkuDB\assets\WotLK\items_fixes.lua
-SkuDB\assets\WotLK\objects.lua
-SkuDB\assets\WotLK\objects_fixes.lua
+SkuDB\assets\WotLK\enchantIDs.lua
 
 SkuNav\Core.lua
 SkuNav\SkuMM.lua
