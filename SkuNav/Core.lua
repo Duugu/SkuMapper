@@ -3089,3 +3089,112 @@ end
 		end
 	end
 ]]
+
+---------------------------------------------------------------------------------------------------------------------------------------
+-- the below are helpers to one time clean up old lk map data for cata
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:isOnContintentZeroOrOne(aWpData)	
+	if not SkuDB.InternalAreaTable[aWpData.areaId] then
+		--print("Error SkuDB.InternalAreaTable[aWpData.areaId] nil", aWpData.areaId, "missing in SkuDB.InternalAreaTable")
+		return false
+	end
+
+	local tKeep = {
+		[493] = true, --"Moonglade",
+		[1638] = true, --"ThunderBluff"
+		[1497] = true, -- "Undercity"
+    	[1537] = true, --"Ironforge"
+	}
+	if tKeep[aWpData.areaId] then
+		return false
+	end
+
+	if SkuDB.InternalAreaTable[aWpData.areaId].ContinentID == 0 and SkuDB.InternalAreaTable[aWpData.areaId].ParentAreaID == 0 then
+		return true
+	end
+
+	if SkuDB.InternalAreaTable[aWpData.areaId].ContinentID == 1 and SkuDB.InternalAreaTable[aWpData.areaId].ParentAreaID == 0 then
+		return true
+	end
+
+	return false
+end
+
+---------------------------------------------------------------------------------------------------------------------------------------
+function SkuNav:CleanUpPreCataMapData()	
+	local del_1_wps, del_1_links, del_23_links = 0, 0, 0
+
+	for i, tWpData in pairs(WaypointCache) do
+		if SkuNav:isOnContintentZeroOrOne(tWpData) == true then
+			--print("deleting", tWpData.areaId, tWpData.name)
+
+			local aWpName = tWpData.name
+			local tCacheIndex = WaypointCacheLookupAll[aWpName] 
+
+			local uid = SkuNav:BuildWpIdFromData(tWpData.typeId, tWpData.dbIndex, tWpData.spawn, tWpData.areaId)
+			if SkuOptions.db.global["SkuNav"].WaypointLevels[uid] then
+				print(aWpName, SkuOptions.db.global["SkuNav"].WaypointLevels[uid])
+				SkuOptions.db.global["SkuNav"].WaypointLevels[uid] = nil
+			end
+			if tWpData.typeId == 1 then
+				if not SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] then
+					print("Error: waypoint nil in db", i, tWpData.typeId, aWpName, tWpData.dbIndex)
+					SkuNav:PlayFailSound()
+					return
+				end
+				
+				--delete links
+				local tLinkNames = {}
+				if tWpData.links.byName then
+					for name, distance in pairs(tWpData.links.byName) do
+						tLinkNames[#tLinkNames + 1] = name
+					end
+				end
+				for x = 1, #tLinkNames do
+					del_1_links = del_1_links + 1
+					SkuNav:DeleteWpLink(aWpName, tLinkNames[x])
+				end
+
+				--delete wp
+				del_1_wps = del_1_wps + 1
+				WaypointCacheLookupIdForCacheIndex[SkuNav:BuildWpIdFromData(WaypointCache[tCacheIndex].typeId, WaypointCache[tCacheIndex].dbIndex, WaypointCache[tCacheIndex].spawn, WaypointCache[tCacheIndex].areaId)] = nil
+				WaypointCacheLookupCacheNameForId[aWpName] = nil
+				WaypointCacheLookupPerContintent[tWpData.contintentId][tCacheIndex] = nil
+				WaypointCacheLookupAll[aWpName] = nil
+				WaypointCache[tCacheIndex] = nil
+
+				--delete from waypoint db
+				SkuOptions.db.global[MODULE_NAME].Waypoints[tWpData.dbIndex] = {false}
+				
+
+			elseif tWpData.typeId == 2 or tWpData.typeId == 3 then
+				--print("   2 or 3, links only")
+				
+				--delete links
+				local tLinkNames = {}
+				if tWpData.links.byName then
+					for name, distance in pairs(tWpData.links.byName) do
+						tLinkNames[#tLinkNames + 1] = name
+					end
+				end
+				for x = 1, #tLinkNames do
+					del_23_links = del_23_links + 1
+					SkuNav:DeleteWpLink(aWpName, tLinkNames[x])
+				end
+				
+			end
+
+			
+		end
+
+	end
+
+	SkuNav:SaveLinkDataToProfile()
+	
+	print("del_1_wps", del_1_wps)
+	print("del_1_links", del_1_links)
+	print("del_23_links", del_23_links)
+
+	--tExportDataTable.WaypointLevels = SkuOptions.db.global["SkuNav"].WaypointLevels or {}
+
+end
