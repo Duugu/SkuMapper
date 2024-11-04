@@ -541,9 +541,42 @@ function SkuNavDrawWaypointsMM(aFrame)
 			else
 				tShow = true
 			end
-			if tWP.links.byId then
-				tShow = true
+
+			if _G["SkuNavMMMainFrameShowUniqueOnly"].selected == true and tShow == true then
+				if tWP.dbIndex then
+					local spawnkey
+					local datatable
+					if tWP.typeId == 2 then
+						spawnkey =  SkuDB.NpcData.Keys.spawns
+						datatable = SkuDB.NpcData.Data
+					elseif tWP.typeId == 3 then
+						spawnkey =  SkuDB.objectKeys.spawns
+						datatable = SkuDB.objectDataTBC
+					end
+					if spawnkey and datatable then
+						
+						if datatable[tWP.dbIndex] and datatable[tWP.dbIndex][spawnkey] and datatable[tWP.dbIndex][spawnkey][tAreaId] then
+							if #datatable[tWP.dbIndex][spawnkey][tAreaId] > 1 then
+								tShow = false
+							end
+						end
+					end
+				end
 			end
+
+
+			if tWP.links.byName then
+				if (SkuNavMMShowCustomWo == true or SkuNavMMShowDefaultWo == true) == false then
+					if tWP.links.byName then
+						for tName, tDistance in pairs(tWP.links.byName) do
+							tShow = true
+							break
+						end
+					end
+				end
+			end
+
+
 			if tShow == true then
 				if tWP.worldX and tWP.worldY then
 					local tFinalX, tFinalY = SkuNavMMWorldToContent(tWP.worldX, tWP.worldY)
@@ -966,6 +999,13 @@ function SkuNav:SkuNavMMOpen()
 				end
 			end)
 			_G["SkuNavMMMainFrameShowFilter"].selectedDefault = false
+
+			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowUniqueOnly", tOptionsParent, "Unique only", 100, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 0, -20)
+			tButtonObj:SetScript("OnMouseUp", function(self, button)
+				self.selected  = self.selected  ~= true
+			end)
+			_G["SkuNavMMMainFrameShowUniqueOnly"].selectedDefault = false
+
 
 			local tButtonObj = SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameShowQuestStartWps", tOptionsParent, "Starts", 95, 20, "TOPLEFT", _G["SkuNavMMMainFrameFollow"], "TOPLEFT", 100, -20)
 			tButtonObj:SetScript("OnMouseUp", function(self, button)

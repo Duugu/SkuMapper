@@ -59,6 +59,13 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r4.2
+	- Added a "Unique only" button to the options, to show creatures and objects with a single spawn point only
+		Linked creatures and objects are always shwon, no matter if it has one or multiple spawns.
+
+r4.1
+	- Initial Cata release
+
 r3.4
 	- Added a bunch of missing creature, quest, item, and object data for phase 3 & 4 from Questie.
 
