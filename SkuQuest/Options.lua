@@ -172,7 +172,7 @@ function SkuQuest:GetResultingWps(aSubIDTable, aSubType, aQuestID, tResultWPs, a
 										end
 									end
 								else
-									if (not aAreaId) or aAreaId == isUiMap then
+									if ((not aAreaId) or aAreaId == isUiMap) and SkuNav:GetContinentNameFromContinentId(tData.ContinentID) then
 										local tNumberOfSpawns = #vs
 										if tNumberOfSpawns > 3 and aOnly3 == true then
 											tNumberOfSpawns = 3

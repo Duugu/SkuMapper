@@ -1639,3 +1639,4 @@ L["Minor"] = "Gering" --glyph type
 L["Vehicle Action Bar"] = "Fahrzeug Aktionsleiste"
 L["Stance Action Bar"] = "Haltungs Aktionsleiste"
 L["Inside"] = "Drinnen"
+L["via"] = "über"

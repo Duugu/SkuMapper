@@ -1642,3 +1642,4 @@ L["Minor"] = "Minor" --glyph type
 L["Vehicle Action Bar"] = "Vehicle Action Bar"
 L["Stance Action Bar"] = "Stance Action Bar"
 L["Inside"] = "Inside"
+L["via"] = "via"

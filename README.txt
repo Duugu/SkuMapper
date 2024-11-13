@@ -59,6 +59,15 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r4.3
+	- Removed a lot of incorrect maps
+	- Fixed bugs with the zones list
+	- Removed a lot of decoration objects
+	- Tried to fix Gilneas
+	- Fixed Barrens
+	- Fixed Strangle
+
+
 r4.2
 	- Added a "Unique only" button to the options, to show creatures and objects with a single spawn point only
 		Linked creatures and objects are always shwon, no matter if it has one or multiple spawns.

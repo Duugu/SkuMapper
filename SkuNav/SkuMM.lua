@@ -1095,8 +1095,10 @@ function SkuNav:SkuNavMMOpen()
 				
 				self.maxCurrentItems = #tMenuItems
 				for x = 1, self.maxVisibleItems do
-					self.MenuButtonsObjects[x]:SetText(tMenuItems[x + self.firstVisibleItem].buttonText)
-					self.MenuButtonsObjects[x].value = tMenuItems[x + self.firstVisibleItem].zoneId
+					if self.MenuButtonsObjects[x] then
+						self.MenuButtonsObjects[x]:SetText(tMenuItems[x + self.firstVisibleItem - 1].buttonText)
+						self.MenuButtonsObjects[x].value = tMenuItems[x + self.firstVisibleItem - 1].zoneId
+					end
 				end
 			end
 
@@ -1125,58 +1127,63 @@ function SkuNav:SkuNavMMOpen()
 				--for x = 1, #tMenuItems do
 				self.maxCurrentItems = #tMenuItems
 				for x = 1, self.maxVisibleItems do
-					self.MenuButtonsObjects[x] = _G["SkuNavMMMainFrameZoneSelectEntry"..x] or SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelectEntry"..x, self, "button"..x, 95, 20, "TOPLEFT", self, "TOPLEFT", 25, -(x * 16))
-					self.MenuButtonsObjects[x]:SetScript("OnMouseDown", function(self, button)
-						self:GetParent().value = self.value
-						self:GetParent():SetText(tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem].buttonText) 
-						for z = 1, #self:GetParent().MenuButtonsObjects do
-							self:GetParent().MenuButtonsObjects[z]:Hide()
+					if tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1] then
+						self.MenuButtonsObjects[x] = _G["SkuNavMMMainFrameZoneSelectEntry"..x] or SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelectEntry"..x, self, "button"..x, 95, 20, "TOPLEFT", self, "TOPLEFT", 25, -(x * 16))
+						self.MenuButtonsObjects[x]:SetScript("OnMouseDown", function(self, button)
+							self:GetParent().value = self.value
+							self:GetParent():SetText(tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1].buttonText) 
+							for z = 1, #self:GetParent().MenuButtonsObjects do
+								self:GetParent().MenuButtonsObjects[z]:Hide()
+							end
+						end)
+						self.MenuButtonsObjects[x]:SetFrameStrata("FULLSCREEN_DIALOG")						
+						self.MenuButtonsObjects[x]:SetWidth(tMenuItemsMaxLen * 8)						
+						self.MenuButtonsObjects[x]:SetText(tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1].buttonText)
+						self.MenuButtonsObjects[x].value = tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1].zoneId
+						if self.selected == true then
+							self.MenuButtonsObjects[x]:Show()
+						else
+							self.MenuButtonsObjects[x]:Hide()
 						end
-					end)
-					self.MenuButtonsObjects[x]:SetFrameStrata("FULLSCREEN_DIALOG")						
-					self.MenuButtonsObjects[x]:SetWidth(tMenuItemsMaxLen * 8)						
-					self.MenuButtonsObjects[x]:SetText(tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem].buttonText)
-					self.MenuButtonsObjects[x].value = tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem].zoneId
-					if self.selected == true then
-						self.MenuButtonsObjects[x]:Show()
-					else
-						self.MenuButtonsObjects[x]:Hide()
 					end
 				end
 				for x = self.maxVisibleItems + 1, #self.MenuButtonsObjects do
 					self.MenuButtonsObjects[x]:Hide()
 				end
-				self.ItemsBackdropFrame = self.ItemsBackdropFrame or CreateFrame("Frame",nil, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
-				self.ItemsBackdropFrame:SetFrameStrata("TOOLTIP")						
-				self.ItemsBackdropFrame:SetWidth(tMenuItemsMaxLen * 8 + 10)
-				--self.ItemsBackdropFrame:SetHeight(500)--20 * #tMenuItems + 10)
-				self.ItemsBackdropFrame:SetHeight(20 * self.maxVisibleItems + 10)
-				self.ItemsBackdropFrame:SetPoint("TOPLEFT", self.MenuButtonsObjects[1], "TOPLEFT", 0, 0)
-				--self.ItemsBackdropFrame:SetPoint("BOTTOMRIGHT", self.MenuButtonsObjects[#tMenuItems], "BOTTOMRIGHT", 0, 0)
-				self.ItemsBackdropFrame:SetPoint("BOTTOMRIGHT", self.MenuButtonsObjects[self.maxVisibleItems], "BOTTOMRIGHT", 0, 0)
-				self.ItemsBackdropFrame:EnableMouse(false)
-				self.ItemsBackdropFrame:SetScript("OnMouseWheel", function(self, aDelta)
-					if aDelta > 0 then
-						if _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem > 1 then
-							_G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem = _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1
+				if self.MenuButtonsObjects[self.maxVisibleItems] then
+					self.ItemsBackdropFrame = self.ItemsBackdropFrame or CreateFrame("Frame",nil, tOptionsParent, BackdropTemplateMixin and "BackdropTemplate" or nil)
+					self.ItemsBackdropFrame:SetFrameStrata("TOOLTIP")						
+					self.ItemsBackdropFrame:SetWidth(tMenuItemsMaxLen * 8 + 10)
+					--self.ItemsBackdropFrame:SetHeight(500)--20 * #tMenuItems + 10)
+					self.ItemsBackdropFrame:SetHeight(20 * self.maxVisibleItems + 10)
+					self.ItemsBackdropFrame:SetPoint("TOPLEFT", self.MenuButtonsObjects[1], "TOPLEFT", 0, 0)
+					--self.ItemsBackdropFrame:SetPoint("BOTTOMRIGHT", self.MenuButtonsObjects[#tMenuItems], "BOTTOMRIGHT", 0, 0)
+					self.ItemsBackdropFrame:SetPoint("BOTTOMRIGHT", self.MenuButtonsObjects[self.maxVisibleItems], "BOTTOMRIGHT", 0, 0)
+					self.ItemsBackdropFrame:EnableMouse(false)
+				
+					self.ItemsBackdropFrame:SetScript("OnMouseWheel", function(self, aDelta)
+						if aDelta > 0 then
+							if _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem > 1 then
+								_G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem = _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1
+							end
+						else
+							if _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem < _G["SkuNavMMMainFrameZoneSelect"].maxCurrentItems - _G["SkuNavMMMainFrameZoneSelect"].maxVisibleItems + 1 then
+								_G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem = _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem + 1
+							end
 						end
+						_G["SkuNavMMMainFrameZoneSelect"]:UpdateList()
+					end)
+					self.ItemsBackdropFrame:SetScript("OnLeave", function(self)
+						if self:IsVisible() == true then
+							_G["SkuNavMMMainFrameZoneSelect"]:GetScript("OnMouseUp")(_G["SkuNavMMMainFrameZoneSelect"], "LeftButton")
+						end
+					end)
+					self.ItemsBackdropFrame:SetMouseClickEnabled(false)
+						if self.selected == true then
+						self.ItemsBackdropFrame:Show()
 					else
-						if _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem < _G["SkuNavMMMainFrameZoneSelect"].maxCurrentItems - _G["SkuNavMMMainFrameZoneSelect"].maxVisibleItems then
-							_G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem = _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem + 1
-						end
+						self.ItemsBackdropFrame:Hide()
 					end
-					_G["SkuNavMMMainFrameZoneSelect"]:UpdateList()
-				end)
-				self.ItemsBackdropFrame:SetScript("OnLeave", function(self)
-					if self:IsVisible() == true then
-						_G["SkuNavMMMainFrameZoneSelect"]:GetScript("OnMouseUp")(_G["SkuNavMMMainFrameZoneSelect"], "LeftButton")
-					end
-				end)
-				self.ItemsBackdropFrame:SetMouseClickEnabled(false)
-					if self.selected == true then
-					self.ItemsBackdropFrame:Show()
-				else
-					self.ItemsBackdropFrame:Hide()
 				end
 			end)
 			_G["SkuNavMMMainFrameZoneSelect"].selectedDefault = false
@@ -2070,10 +2077,12 @@ function SkuNav:SkuNavMMOpen()
 			"SkuNavMMMainFrameRead",
 		}
 		for _, v in pairs(tObjs) do
-			if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 3 then
-				_G[v]:Hide()
-			else
-				_G[v]:Show()
+			if _G[v] then
+				if SkuOptions.db.profile["SkuNav"].showAdvancedControls < 3 then
+					_G[v]:Hide()
+				else
+					_G[v]:Show()
+				end
 			end
 		end
 

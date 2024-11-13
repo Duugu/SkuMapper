@@ -1,8 +1,8 @@
 ## Interface: 40401
-## Title: SkuMapper (4.2)
+## Title: SkuMapper (4.3)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
-## Version: 4.2
+## Version: 4.3
 ## X-Curse-Project-ID: 
 
 Bindings.xml
