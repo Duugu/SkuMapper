@@ -59,6 +59,10 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r4.4
+	- A lot of Spirit Healer waypoints added
+	- Tried to fix the Molten Front area
+
 r4.3
 	- Removed a lot of incorrect maps
 	- Fixed bugs with the zones list

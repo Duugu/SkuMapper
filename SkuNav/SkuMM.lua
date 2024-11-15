@@ -370,6 +370,7 @@ local tContinentIdToFolderName = {
 	[728] = "thebattleforgilneas",
 	[654] = "gilneas2",
 	[2755] = "tolbarad",
+	[861] = "firelandsdailies",
 }
 local currentContinentId
 local function SkuNavMMUpdateContent()
