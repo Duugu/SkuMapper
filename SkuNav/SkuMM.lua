@@ -14,6 +14,8 @@ SkuWaypointWidgetRepo = nil
 SkuWaypointWidgetRepoMM = nil
 SkuWaypointWidgetCurrent = nil
 
+tSkuNavMMDrawCache = {}
+
 local tSkuNavMMContent = {}
 local tSkuNavMMZoom = 1
 local tSkuNavMMPosX = 0
@@ -72,7 +74,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNavMMGetCursorPositionContent2()
 	local x, y = GetCursorPosition()
-	--dprint(x, UIParent:GetScale(), _G["SkuNavMMMainFrameScrollFrameMapMain"]:GetLeft(),_G["SkuNavMMMainFrame"]:GetScale() )
 	local txPos = ((x / UIParent:GetScale()) - ( _G["SkuNavMMMainFrameScrollFrameContent"]:GetLeft()   * _G["SkuNavMMMainFrame"]:GetScale() ) - ((_G["SkuNavMMMainFrameScrollFrameContent"]:GetWidth()  / 2) * _G["SkuNavMMMainFrame"]:GetScale()) ) * (1 / _G["SkuNavMMMainFrame"]:GetScale())
 	local tyPos = ((y / UIParent:GetScale()) - ( _G["SkuNavMMMainFrameScrollFrameContent"]:GetBottom() * _G["SkuNavMMMainFrame"]:GetScale() ) - ((_G["SkuNavMMMainFrameScrollFrameContent"]:GetHeight() / 2) * _G["SkuNavMMMainFrame"]:GetScale()) ) * (1 / _G["SkuNavMMMainFrame"]:GetScale())
 	return txPos, tyPos
@@ -96,11 +97,8 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:SkuMM_PLAYER_LOGIN()
 	--[[
-	print("SkuMM_PLAYER_LOGIN")
-
 	if SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsedOnLogout == true then
 		C_Timer.After(20, function()
-			print("xxxxxxxxxxxxxx")
 			--_G["SkuNavMMMainFrame"]:SetWidth(_G["SkuNavMMMainFrame"]:GetWidth() - 300)
 		end)
 	end	
@@ -110,7 +108,6 @@ end
 ------------------------------------------------------------------------------------------------------------------------
 function SkuNav:SkuMM_PLAYER_LOGOUT()
 	--[[
-	print("SkuMM_PLAYER_LOGOUT")
 	SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsedOnLogout = SkuOptions.db.profile[MODULE_NAME].SkuNavMMMainIsCollapsed
 ]]
 end
@@ -316,13 +313,12 @@ local oldtSkuNavMMZoom
 function SkuNavDrawLine(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, prt, lineframe, pA, pB) 
 	if not sx or not sy or not ex or not ey then return nil end
 
-	lineframe = SkuWaypointLineRepoMM:Acquire()
-	if tSkuNavMMZoom < 1.75 then
-		if lineframe:GetTexture() ~= "Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line64" then lineframe:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line64") end
+	if lineframe == nil then
+		lineframe = SkuWaypointLineRepoMM:Acquire()
+		lineframe:Show()
 	else
-		if lineframe:GetTexture() ~= "Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line" then lineframe:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line") end
 	end
-	--lineframe.aText = "line"
+
 
 	if sx == ex and sy == ey then 
 		return nil 
@@ -349,9 +345,15 @@ function SkuNavDrawLine(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, prt, linefram
 	local C1, C2 = (1 + sa - ca) / 2.0, (1 - sa - ca) / 2.0
 	lineframe:SetTexCoord(C1, C2, -sa+C1, ca+C2, ca+C1, sa+C2, ca-sa+C1, ca+sa+C2)
 	lineframe:SetVertexColor(r, g, b, lineAlpha)
-	lineframe:Show()
 
-	--return lineframe
+	if tSkuNavMMZoom < 1.75 then
+		if lineframe:GetTexture() ~= "Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line64" then lineframe:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line64") end
+	else
+		if lineframe:GetTexture() ~= "Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line" then lineframe:SetTexture("Interface\\AddOns\\SkuMapper\\SkuNav\\assets\\line") end
+	end
+	--lineframe.aText = "line"
+
+	return lineframe
 end
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -429,55 +431,151 @@ end
 
 ------------------------------------------------------------------------------------------------------------------------
 local function ClearWaypointsMM()
-	SkuWaypointWidgetRepoMM:ReleaseAll()
-	SkuWaypointLineRepoMM:ReleaseAll()
+	--print("ClearWaypointsMM")
+	--SkuWaypointWidgetRepoMM:ReleaseAll()
+	--SkuWaypointLineRepoMM:ReleaseAll()
 end
-function SkuNavDrawWaypointWidgetMM(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, aframe, aText, aWpColorR, aWpColorG, aWpColorB, aWpColorA, aComments)
+------------------------------------------------------------------------------------------------------------------------
+function ClearLineMM(aPoolObject)
+	if aPoolObject then
+		aPoolObject:Hide()
+		SkuWaypointLineRepoMM:Release(aPoolObject)
+	end
+end
+------------------------------------------------------------------------------------------------------------------------
+ function ClearWaypointMM(aPoolObjects)
+	if aPoolObjects.waypoint then
+		if aPoolObjects.lines then
+			for i1, v1 in pairs(aPoolObjects.lines) do
+				ClearLineMM(v1)
+			end
+			aPoolObjects.lines = {}
+		end
+		aPoolObjects.waypoint:Hide()
+		SkuWaypointWidgetRepoMM:Release(aPoolObjects.waypoint)
+		aPoolObjects.waypoint = nil
+	end
+end
+------------------------------------------------------------------------------------------------------------------------
+local function ClearAllWaypointsMM()
+	for i, v in pairs(tSkuNavMMDrawCache) do
+		if v.poolObjects then
+			if v.poolObjects.waypoint then
+				ClearWaypointMM(v.poolObjects)
+				if v.poolObjects.lines then
+					for i1, v1 in pairs(v.poolObjects.lines) do
+						ClearLineMM(v1)
+					end
+					v.poolObjects.lines = {}
+				end
+			end
+		elseif v.lines  then
+			for i1, v1 in pairs(v.lines) do
+				ClearLineMM(v1)
+			end
+			v.lines = {}
+		end
+	end
+	tSkuNavMMDrawCache = {}
+end
+
+
+
+function SkuNavDrawWaypointWidgetMM(sx, sy, ex, ey, lineW, lineAlpha, r, g, b, aframe, aText, aWpColorR, aWpColorG, aWpColorB, aWpColorA, aComments, aPoolObject)
 	aWpColorA = aWpColorA or 1
-	local l = SkuWaypointWidgetRepoMM:Acquire()
-	l:SetParent(_G["SkuNavMMMainFrameScrollFrameMapMainDraw1"])
+	local l = aPoolObject
+	if not l then
+		l = SkuWaypointWidgetRepoMM:Acquire()
+		l:SetParent(_G["SkuNavMMMainFrameScrollFrameMapMainDraw1"])
+		l:SetDrawLayer("ARTWORK", 1)
+		l:Show()
+	end
 	l:SetColorTexture(aWpColorR, aWpColorG, aWpColorB, aWpColorA)
 	l:SetSize(lineW * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (2 - tSkuNavMMZoom), lineW * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (2 - tSkuNavMMZoom))
-	l:SetDrawLayer("ARTWORK", 1)
 	l.aText = aText
 	l.aComments = aComments
+	if l.MMx ~= sx or l.MMy ~= sy then
+		l:SetPoint("CENTER", aframe, "CENTER", sx, sy)
+	end
 	l.MMx = sx
 	l.MMy = sy
-	l:SetPoint("CENTER", aframe, "CENTER", sx, sy)
-	l:Show()
+
 	return l
 end
 -----------------------------------------------------------------------------------------------------------------------
 local function DrawPolyZonesMM(aFrame)
+	tSkuNavMMDrawCache.polyPoolObjects = tSkuNavMMDrawCache.polyPoolObjects or {lines = {}}
 	local tPlayerContintentId = select(3, SkuNav:GetAreaData(SkuNav:GetCurrentAreaId()))
 	for x = 1, #SkuDB.Polygons.data do
 		if SkuDB.Polygons.data[x].continentId == tPlayerContintentId then		
 			if #SkuDB.Polygons.data[x].nodes > 2 then
 				local tRouteColor = {r = 1, g = 1, b = 1, a = 1}
 				for line = 2, #SkuDB.Polygons.data[x].nodes do
+					if tSkuNavMMDrawCache[x.."-"..line] == nil then
+						tSkuNavMMDrawCache[x.."-"..line] = {}
+					end
+					if tSkuNavMMDrawCache[x.."-"..line].poolObjects == nil then
+				
+						tSkuNavMMDrawCache[x.."-"..line].poolObjects = {waypoint = nil, lines = {}}
+					end
+		
+
 					local tRouteColor = SkuDB.Polygons.eTypes[SkuDB.Polygons.data[x].type][2][SkuDB.Polygons.data[x].subtype][2]
 					local x1, y1 = SkuNavMMWorldToContent(SkuDB.Polygons.data[x].nodes[line].x, SkuDB.Polygons.data[x].nodes[line].y)
-					local tP1Obj = SkuNavDrawWaypointWidgetMM(x1, y1, 1,  1, 3, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, tRouteColor.r, tRouteColor.g, tRouteColor.b, 0)
+
+					
+					local tP1Obj = SkuNavDrawWaypointWidgetMM(x1, y1, 1,  1, 3, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, tRouteColor.r, tRouteColor.g, tRouteColor.b, 0, nil, tSkuNavMMDrawCache[x.."-"..line].poolObjects.waypoint)
+					if tP1Obj ~= nil then
+						tSkuNavMMDrawCache[x.."-"..line].poolObjects.waypoint = tP1Obj
+					end					
 					local point, relativeTo, relativePoint, xOfs, yOfs = tP1Obj:GetPoint(1)
 
 					local x2, y2 = SkuNavMMWorldToContent(SkuDB.Polygons.data[x].nodes[line-1].x, SkuDB.Polygons.data[x].nodes[line-1].y)
-					local tP2Obj = SkuNavDrawWaypointWidgetMM(x2, y2, 1,  1, 3, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, tRouteColor.r, tRouteColor.g, tRouteColor.b, 0)
+					local tP2Obj = SkuNavDrawWaypointWidgetMM(x2, y2, 1,  1, 3, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, tRouteColor.r, tRouteColor.g, tRouteColor.b, 0, nil, tSkuNavMMDrawCache[x.."-"..line].poolObjects.waypoint)
+					if tP2Obj ~= nil then
+						tSkuNavMMDrawCache[x.."-"..line].poolObjects.waypoint = tP2Obj
+					end					
 					local Prevpoint, PrevrelativeTo, PrevrelativePoint, PrevxOfs, PrevyOfs = tP2Obj:GetPoint(1)
 
+					local tDrawn = false
+
 					if PrevrelativeTo then
-						SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, nil, relativeTo, PrevrelativeTo) 
+						--SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, nil, relativeTo, PrevrelativeTo) 
+						local tPObject = tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line]
+						tPObject = SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, tPObject, relativeTo, PrevrelativeTo) 
+						tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line] = tPObject
+						tDrawn = true
 					end
+					
 					if line == #SkuDB.Polygons.data[x].nodes then
 						local x2, y2 = SkuNavMMWorldToContent(SkuDB.Polygons.data[x].nodes[1].x, SkuDB.Polygons.data[x].nodes[1].y)
-						local tP2Obj = SkuNavDrawWaypointWidgetMM(x2, y2, 1,  1, 3, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, tRouteColor.r, tRouteColor.g, tRouteColor.b, 0)
+						local tP2Obj = SkuNavDrawWaypointWidgetMM(x2, y2, 1,  1, 3, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, v, tRouteColor.r, tRouteColor.g, tRouteColor.b, 0, nil, tSkuNavMMDrawCache[x.."-"..line].poolObjects.waypoint)
+						if tP2Obj ~= nil then
+							tSkuNavMMDrawCache[x.."-"..line].poolObjects.waypoint = tP2Obj
+						end							
 						local Prevpoint, PrevrelativeTo, PrevrelativePoint, PrevxOfs, PrevyOfs = tP2Obj:GetPoint(1)
 						if PrevrelativeTo then
-							SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, nil, relativeTo, PrevrelativeTo) 
+							--SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, nil, relativeTo, PrevrelativeTo) 
+							local tPObject = tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line.."e"]
+							tPObject = SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, tRouteColor.r, tRouteColor.g, tRouteColor.b, aFrame, tPObject, relativeTo, PrevrelativeTo) 
+							tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line.."e"] = tPObject
+							tDrawn = true
 						end
 					end
+
+					if tDrawn == false then
+						--don't draw line
+						if tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line] then
+							ClearLineMM(tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line])
+							tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line] = nil
+						end
+						if tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line.."e"] then
+							ClearLineMM(tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line.."e"])
+							tSkuNavMMDrawCache.polyPoolObjects.lines[x.."-"..line.."e"] = nil
+						end
+
+					end
 				end
-			else
-				--dprint("error - broken polygon:", x)
 			end
 		end
 	end
@@ -487,9 +585,21 @@ local SkuNavMMShowCustomWo = false
 local SkuNavMMShowDefaultWo = false
 local tWpFrames = {}
 local tCutOffFactor = 0.6
+local lastAreaId, lastContinentId = nil, nil
+local tCountDrawnWPs = 0
+local tCountDrawnLs = 0
+local tCountClearedWPs = 0
+local tCountClearedWPs1 = 0
+local tCountClearedLs = 0
 -- sku mm
 function SkuNavDrawWaypointsMM(aFrame)
 	local beginTime = debugprofilestop()
+
+	tCountDrawnWPs = 0
+	tCountDrawnLs = 0
+	tCountClearedWPs = 0
+	tCountClearedWPs1 = 0
+	tCountClearedLs = 0
 
 	if SkuOptions.db.profile[MODULE_NAME].showRoutesOnMinimap ~= true then
 		--return
@@ -523,16 +633,30 @@ function SkuNavDrawWaypointsMM(aFrame)
 	--wp draw
 	local tWP = nil
 
-	local tCountDrawnWPs = 0
+
 	if not tAreaId and not tPlayerContintentId then
 		print("fail: tAreaId, tPlayerContintentId nil")
 		return
 	end
+
+	if tAreaId ~= lastAreaId or lastContinentId ~= tPlayerContintentId then
+		ClearAllWaypointsMM()
+	end
+
+	lastAreaId = tAreaId
+	lastContinentId = tPlayerContintentId
+
 	for i, v in SkuNav:ListWaypoints2(false, nil, tAreaId, tPlayerContintentId, nil) do
 		tWP = SkuNav:GetWaypointData2(v)
 		if tWP then
 			local tTooltipText = v
-
+			if tSkuNavMMDrawCache[WaypointCacheLookupAll[v]] == nil then
+				tSkuNavMMDrawCache[WaypointCacheLookupAll[v]] = {}
+			end
+			if tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects == nil then
+				
+				tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects = {waypoint = nil, lines = {}}
+			end
 			tWP.comments = tWP.comments or {["deDE"] = {},["enUS"] = {},}
 			local tShow = false
 			if _G["SkuNavMMMainFrameShowFilter"].selected == true then
@@ -581,121 +705,171 @@ function SkuNavDrawWaypointsMM(aFrame)
 			if tShow == true then
 				if tWP.worldX and tWP.worldY then
 					local tFinalX, tFinalY = SkuNavMMWorldToContent(tWP.worldX, tWP.worldY)
-					local tBiggerValue = tFinalX
-					if tFinalY > tFinalX then
-						tBiggerValue = tFinalY
-					end
-					if tBiggerValue > -(tTileSize * tCutOffFactor) and tBiggerValue < (tTileSize * tCutOffFactor) then
-						tCountDrawnWPs = tCountDrawnWPs + 1
+					if 
+						(tFinalX > -(tTileSize * tCutOffFactor) and tFinalX < (tTileSize * tCutOffFactor))
+							and
+						(tFinalY > -(tTileSize * tCutOffFactor) and tFinalY < (tTileSize * tCutOffFactor))
+					then
 
-						local tSize = 4
-						
-						if WaypointCache[WaypointCacheLookupAll[v]].tackStep ~= nil then
-							tRouteColor = {r = 0.33, g = 0.33, b = 1, a = 1}
-						else
-							tRouteColor = {r = 1, g = 1, b = 1, a = 1}
-						end
-	
+						--needs to be drawn
 
+						if tCountDrawnWPs + tCountDrawnLs < 15000 or tSelectedZone ~= -2 then
 
-						local tFilter
-						if SkuOptions.db.profile["SkuNav"].waypointFilterString ~= "" then
-							if string.find(slower(tWP.name), slower(SkuOptions.db.profile["SkuNav"].waypointFilterString)) then
-								tFilter = true
+							tCountDrawnWPs = tCountDrawnWPs + 1
+
+							local tSize = 4
+							
+							if WaypointCache[WaypointCacheLookupAll[v]].tackStep ~= nil then
+								tRouteColor = {r = 0.33, g = 0.33, b = 1, a = 1}
+							else
+								tRouteColor = {r = 1, g = 1, b = 1, a = 1}
 							end
-						end
+		
 
-						if tFilter then
-							tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 1, 1, 1, tWP.comments[Sku.Loc])
-							tWpFrames[v].hasLine = false
-						else
-							if tWP.typeId == 1 or tWP.typeId == 4 then
-									--red
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 0, 0, 1, tWP.comments[Sku.Loc])
+
+							local tFilter
+							if SkuOptions.db.profile["SkuNav"].waypointFilterString ~= "" then
+								if string.find(slower(tWP.name), slower(SkuOptions.db.profile["SkuNav"].waypointFilterString)) then
+									tFilter = true
+								end
+							end
+
+							if tFilter then
+								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 1, 1, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
 								tWpFrames[v].hasLine = false
-							elseif tWP.typeId == 2 then
-								if tWP.spawnNr > 3 then
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0.3, 0.7, 0.7, 1, tWP.comments[Sku.Loc])
+							else
+								if tWP.typeId == 1 or tWP.typeId == 4 then
+										--red
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 0, 0, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
 									tWpFrames[v].hasLine = false
+								elseif tWP.typeId == 2 then
+									if tWP.spawnNr > 3 then
+										tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0.3, 0.7, 0.7, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
+										tWpFrames[v].hasLine = false
+									else
+										tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 0.3, 0.7, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
+										tWpFrames[v].hasLine = false
+									end
+								elseif tWP.typeId == 3 then
+									--green
+									if tWP.spawnNr > 3 then
+										tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0, 0.7, 0, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
+										tWpFrames[v].hasLine = false
+									else
+										tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
+										tWpFrames[v].hasLine = false
+									end
 								else
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY, 1,  1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 0.3, 0.7, 1, tWP.comments[Sku.Loc])
+									--white
+									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 1, 1, 1, tWP.comments[Sku.Loc], tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint)
 									tWpFrames[v].hasLine = false
 								end
-							elseif tWP.typeId == 3 then
-								--green
-								if tWP.spawnNr > 3 then
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0, 0.7, 0, 1, tWP.comments[Sku.Loc])
-									tWpFrames[v].hasLine = false
-								else
-									tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 0.8, 0.8, 0, 1, tWP.comments[Sku.Loc])
-									tWpFrames[v].hasLine = false
+							end
+
+
+							if tWpFrames[v] ~= nil then
+								tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint = tWpFrames[v]
+							end
+
+							local tFinalSize = tSize
+							if tSkuNavMMZoom <= 1 then
+								tFinalSize = tSize * (tSkuNavMMZoom)
+								if tFinalSize < 2 then
+									tFinalSize = 2
 								end
 							else
-								--white
-								tWpFrames[v] = SkuNavDrawWaypointWidgetMM(tFinalX, tFinalY,  1,   1, tSize, tRouteColor.r, tRouteColor.g, tRouteColor.b, tRouteColor.a, aFrame, tTooltipText, 1, 1, 1, 1, tWP.comments[Sku.Loc])
-								tWpFrames[v].hasLine = false
-							end
-						end
-
-						local tFinalSize = tSize
-						if tSkuNavMMZoom <= 1 then
-							tFinalSize = tSize * (tSkuNavMMZoom)
-							if tFinalSize < 2 then
-								tFinalSize = 2
-							end
-						else
-							tFinalSize = 4 + (tSkuNavMMZoom / 12)
-							if tFinalSize > 16 then
-								tFinalSize = 16
-							end
-						end
-
-						if tFilter then
-							tFinalSize = tFinalSize + 3
-						end
-
-						tWpFrames[v]:SetSize(tFinalSize, tFinalSize)--4 * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (3 - tSkuNavMMZoom), tSize * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (3 - tSkuNavMMZoom))
-
-						if (SkuNavMMShowCustomWo == true or SkuNavMMShowDefaultWo == true) == false then
-							if tWP.links.byName then
-								for tName, tDistance in pairs(tWP.links.byName) do
-									if tWpFrames[tName] then
-
-										local tTrack
-										if 
-											WaypointCacheLookupAll[tWP.name] and
-											WaypointCacheLookupAll[tName] and
-											WaypointCache[WaypointCacheLookupAll[tName]] and
-											WaypointCache[WaypointCacheLookupAll[tWP.name]] and
-											WaypointCache[WaypointCacheLookupAll[tWP.name]].tackStep ~= nil and
-											WaypointCache[WaypointCacheLookupAll[tName]].tackStep ~= nil 
-										then
-											tTrack = true
-										end
-
-										tCountDrawnWPs = tCountDrawnWPs + 1
-										local _, relativeTo, _, xOfs, yOfs = tWpFrames[v]:GetPoint(1)
-										local _, PrevrelativeTo, _, PrevxOfs, PrevyOfs = tWpFrames[tName]:GetPoint(1)
-										if tTrack then
-											SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, 0.33, 0.33, 1, aFrame, nil, relativeTo, PrevrelativeTo) 
-										else
-											SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, 1, 1, 1, aFrame, nil, relativeTo, PrevrelativeTo) 
-										end
-									end
+								tFinalSize = 4 + (tSkuNavMMZoom / 12)
+								if tFinalSize > 16 then
+									tFinalSize = 16
 								end
+							end
+
+							if tFilter then
+								tFinalSize = tFinalSize + 3
+							end
+
+							tWpFrames[v]:SetSize(tFinalSize, tFinalSize)--4 * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (3 - tSkuNavMMZoom), tSize * (tSkuNavMMZoom) - tSkuNavMMZoom * 2 + (3 - tSkuNavMMZoom))
+
+						end
+					else
+						--don't draw wp
+						if tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint then
+							tCountClearedWPs = tCountClearedWPs + 1
+							ClearWaypointMM(tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects)
+							tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint = nil
+						end
+
+
+					end
+				end
+			else
+				--don't draw wp
+				if tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint then
+					tCountClearedWPs1 = tCountClearedWPs1 + 1
+					ClearWaypointMM(tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects)
+					tSkuNavMMDrawCache[WaypointCacheLookupAll[v]].poolObjects.waypoint = nil
+				end				
+			end
+		else
+			print("no wp data")
+		end
+	end
+
+	for name, widget in pairs(tWpFrames) do
+		tWP = SkuNav:GetWaypointData2(name)
+		if tWP then
+
+			if (SkuNavMMShowCustomWo == true or SkuNavMMShowDefaultWo == true) == false then
+				if tWP.links.byName then
+					for tName, tDistance in pairs(tWP.links.byName) do
+						if tWpFrames[tName] then
+
+							local tTrack
+							if 
+								WaypointCacheLookupAll[tWP.name] and
+								WaypointCacheLookupAll[tName] and
+								WaypointCache[WaypointCacheLookupAll[tName]] and
+								WaypointCache[WaypointCacheLookupAll[tWP.name]] and
+								WaypointCache[WaypointCacheLookupAll[tWP.name]].tackStep ~= nil and
+								WaypointCache[WaypointCacheLookupAll[tName]].tackStep ~= nil 
+							then
+								tTrack = true
+							end
+
+							tCountDrawnWPs = tCountDrawnWPs + 1
+							local _, relativeTo, _, xOfs, yOfs = tWpFrames[name]:GetPoint(1)
+							local _, PrevrelativeTo, _, PrevxOfs, PrevyOfs = tWpFrames[tName]:GetPoint(1)
+							local tPObject = tSkuNavMMDrawCache[WaypointCacheLookupAll[name]].poolObjects.lines[WaypointCacheLookupAll[tName]]
+							if tTrack then
+								tPObject = SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, 0.33, 0.33, 1, aFrame, tPObject, relativeTo, PrevrelativeTo) 
+								tCountDrawnLs = tCountDrawnLs + 1
+							else
+								tPObject = SkuNavDrawLine(xOfs, yOfs, PrevxOfs, PrevyOfs, 3, tRouteColor.a, 1, 1, 1, aFrame, tPObject, 		relativeTo, PrevrelativeTo) 
+								tCountDrawnLs = tCountDrawnLs + 1
+							end
+
+							tSkuNavMMDrawCache[WaypointCacheLookupAll[name]].poolObjects.lines[WaypointCacheLookupAll[tName]] = tPObject
+
+						else
+							--don't draw line
+							if tSkuNavMMDrawCache[WaypointCacheLookupAll[name]].poolObjects.lines[WaypointCacheLookupAll[tName]] then
+								tCountClearedLs = tCountClearedLs + 1
+								ClearLineMM(tSkuNavMMDrawCache[WaypointCacheLookupAll[name]].poolObjects.lines[WaypointCacheLookupAll[tName]])
+								tSkuNavMMDrawCache[WaypointCacheLookupAll[name]].poolObjects.lines[WaypointCacheLookupAll[tName]] = nil
 							end
 						end
 					end
 				end
 			end
 		end
+
 	end
 
 	SkuNavMmDrawTimer = tCountDrawnWPs / 5000
-	if SkuNavMmDrawTimer < 0.1 then SkuNavMmDrawTimer = 0.1 end
+	if SkuNavMmDrawTimer < 0.25 then SkuNavMmDrawTimer = 0.25	 end
+
 	--if SkuNavMmDrawTimer > 1 then SkuNavMmDrawTimer = 1 end
 
-	--dprint("End SkuNavDrawWaypointsMM", debugprofilestop() - beginTime)
 end
 
 
@@ -833,12 +1007,12 @@ function SkuNav:SkuNavMMOpen()
 			fs:SetTextHeight(12)
 			fs:SetFontObject("ChatFontSmall")
 			fs:SetPoint("TOPRIGHT", MainFramePosFsFrame, "TOPRIGHT", -5, -5)
-			fs:SetText("MousePosText")
+			fs:SetText("")
 			fs:Show()
 			fs = MainFramePosFsFrame:CreateFontString("PlayerPosText")--, "HIGHLIGHT", "GameTooltipText")
 			fs:SetTextHeight(12)
 			fs:SetFontObject("ChatFontSmall")
-			fs:SetPoint("TOPRIGHT", _G["MousePosText"], "TOPRIGHT", 0, -14)
+			fs:SetPoint("TOPRIGHT", _G["MousePosText"], "TOPRIGHT", 0, -4)
 			fs:SetText("PlayerPosText")
 			fs:Show()			
 
@@ -1131,6 +1305,19 @@ function SkuNav:SkuNavMMOpen()
 					if tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1] then
 						self.MenuButtonsObjects[x] = _G["SkuNavMMMainFrameZoneSelectEntry"..x] or SkuNav:CreateButtonFrameTemplate("SkuNavMMMainFrameZoneSelectEntry"..x, self, "button"..x, 95, 20, "TOPLEFT", self, "TOPLEFT", 25, -(x * 16))
 						self.MenuButtonsObjects[x]:SetScript("OnMouseDown", function(self, button)
+							local tSelectedZone = _G["SkuNavMMMainFrameZoneSelect"].value
+							if tSelectedZone then
+								if tSelectedZone == -2 then
+									if tSkuNavMMZoom < 0.5 then
+										tSkuNavMMZoom = 0.5
+									end
+								end
+							end
+							SkuNavMMUpdateContent()
+
+							ClearAllWaypointsMM()
+							--_G["SkuNavMMMainFrameScrollFrameContent"]:GetScript("OnMouseWheel")(_G["SkuNavMMMainFrameScrollFrameContent"]:GetScript("OnMouseWheel"), 1)
+
 							self:GetParent().value = self.value
 							self:GetParent():SetText(tMenuItems[x + _G["SkuNavMMMainFrameZoneSelect"].firstVisibleItem - 1].buttonText) 
 							for z = 1, #self:GetParent().MenuButtonsObjects do
@@ -1878,7 +2065,15 @@ function SkuNav:SkuNavMMOpen()
 							local posX = position.x * 100;
 							local posY = position.y * 100;
 							local tZx, tZy = format("%.1f", posX), format("%.1f", posY)
-							_G["PlayerPosText"]:SetText(tZx.." "..tZy)
+							_G["PlayerPosText"]:SetText(
+							"Pos "..tZx.." "..tZy..
+							--"\r\nZoom: "..tSkuNavMMZoom..
+							"\r\nDrawn "..tCountDrawnWPs.."/"..tCountDrawnLs..
+							"\r\nClear "..tCountClearedWPs.."/"..tCountClearedLs
+							--"\r\nCleared Links: "..tCountClearedLs
+						)
+
+
 						end
 					end
 										
@@ -1897,12 +2092,23 @@ function SkuNav:SkuNavMMOpen()
 			end)
 			contentObj:SetScript("OnMouseWheel", function(self, dir)
 				tSkuNavMMZoom = tSkuNavMMZoom + ((dir / 10) * tSkuNavMMZoom)
-				if tSkuNavMMZoom < 0.01 then
-					tSkuNavMMZoom = 0.01
+				local tSelectedZone = _G["SkuNavMMMainFrameZoneSelect"].value
+				if tSelectedZone then
+					if tSelectedZone == -2 then
+						if tSkuNavMMZoom < 0.5 then
+							tSkuNavMMZoom = 0.5
+						end
+					else
+						if tSkuNavMMZoom < 0.01 then
+							tSkuNavMMZoom = 0.01
+						end
+					end
 				end
+					
 				if tSkuNavMMZoom > 150 then
 					tSkuNavMMZoom = 150
 				end
+
 				SkuNavMMUpdateContent()
 			end)
 			contentObj:SetScript("OnMouseDown", function(self, button)
@@ -2017,7 +2223,7 @@ function SkuNav:SkuNavMMOpen()
 				if SkuOptions.db.profile[MODULE_NAME].showSkuMM == true then
 					SkuNavMMMainFrameScrollFrameContenttTime1 = SkuNavMMMainFrameScrollFrameContenttTime1 + time
 					if SkuNavMMMainFrameScrollFrameContentDraging == true then
-						ClearWaypointsMM()
+						--ClearWaypointsMM()
 						SkuNavDrawWaypointsMM(_G["SkuNavMMMainFrameScrollFrameContent1"])
 						DrawPolyZonesMM(_G["SkuNavMMMainFrameScrollFrameContent1"])
 					else
@@ -2029,17 +2235,18 @@ function SkuNav:SkuNavMMOpen()
 									tSkuNavMMPosY = -tPx - (tYardsPerTile * 2)
 								end
 							end
-							ClearWaypointsMM()
+							--ClearWaypointsMM()
 							SkuNavDrawWaypointsMM(_G["SkuNavMMMainFrameScrollFrameContent1"])
 							DrawPolyZonesMM(_G["SkuNavMMMainFrameScrollFrameContent1"])
-							local facing = GetPlayerFacing()
-							if facing then
-								RotateTexture(math.cos(-facing), -math.sin(-facing),0.5,math.sin(-facing), math.cos(-facing),0.5, 0.5, 0.5, 1, _G["playerArrow"])
-							end
+
 
 							SkuNavMMMainFrameScrollFrameContenttTime1 = 0
 						end
 					end
+					local facing = GetPlayerFacing()
+					if facing then
+						RotateTexture(math.cos(-facing), -math.sin(-facing),0.5,math.sin(-facing), math.cos(-facing),0.5, 0.5, 0.5, 1, _G["playerArrow"])
+					end					
 				end
 			end)
 

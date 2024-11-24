@@ -283,7 +283,6 @@ function SkuNav:CreateWaypointCache(aAddLocalizedNames)
 											tOldLinks = WaypointCache[WaypointCacheLookupAll[tName]].links
 											tWpIndex = WaypointCacheLookupAll[tName]
 										end
-										--print("add custom", tWpIndex, tIndex, tData, tName, tWaypointData.contintentId, tWaypointData.areaId, isUiMap, tWaypointData.worldX, tWaypointData.worldY)						
 
 										WaypointCache[tWpIndex] = {
 											name = tName,
@@ -476,14 +475,14 @@ function SkuNav:ListWaypoints2(aSort, aFilter, aAreaId, aContinentId, aExcludeRo
 
 	local tWpList = {}
 	for tIndex, tName in pairs(WaypointCacheLookupPerContintent[aContinentId]) do
-		if tFilterTypes[WaypointCache[tIndex].typeId] then
+		--if tFilterTypes[WaypointCache[tIndex].typeId] then
 			if not UiMapId or UiMapId == WaypointCache[tIndex].uiMapId then
 				--tWpList[tIndex] = tName
-				if not string.find(tName, "%[DND%]") and not string.find(tName, "%(DND%)") then
+				--if not string.find(tName, "%[DND%]") and not string.find(tName, "%(DND%)") then
 					tWpList[#tWpList + 1] = tName
-				end
+				--end
 			end
-		end
+		--end
 	end
 
 	if aSort == true then
@@ -507,7 +506,6 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:DeleteWpLink(aWpAName, aWpBName)
-	print("DeleteWpLink", aWpAName, aWpBName)
 	local tWpAIndex = WaypointCacheLookupAll[aWpAName]
 	local tWpBIndex = WaypointCacheLookupAll[aWpBName]
 	local tWpAData = SkuNav:GetWaypointData2(nil, tWpAIndex)
@@ -523,6 +521,22 @@ function SkuNav:DeleteWpLink(aWpAName, aWpBName)
 	
 	if not tWpAData.links.byId[tWpBIndex] or not tWpBData.links.byId[tWpAIndex] then
 		return false
+	end
+
+	local tWpAName = aWpAName
+	local tWpBName = aWpBName
+
+	if tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpAName]].poolObjects and tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpAName]].poolObjects.lines then
+		for i1, v1 in pairs(tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpAName]].poolObjects.lines) do
+			ClearLineMM(v1)
+		end
+		tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpAName]].poolObjects.lines = {}
+	end
+	if tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpBName]].poolObjects and tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpBName]].poolObjects.lines then
+		for i1, v1 in pairs(tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpBName]].poolObjects.lines) do
+			ClearLineMM(v1)
+		end
+		tSkuNavMMDrawCache[WaypointCacheLookupAll[tWpBName]].poolObjects.lines = {}
 	end
 
 	WaypointCache[tWpAIndex].links.byId[tWpBIndex] = nil
@@ -544,11 +558,10 @@ end
 
 --------------------------------------------------------------------------------------------------------------------------------------
 function SkuNav:CreateWpLink(aWpAName, aWpBName)
-	print("CreateWpLink", aWpAName, aWpBName)
 	if aWpAName ~= aWpBName then
 		local tWpAIndex = WaypointCacheLookupAll[aWpAName]
 		local tWpBIndex = WaypointCacheLookupAll[aWpBName]
-		print("tWpAIndex", tWpAIndex, SkuNav:GetWaypointData2(nil, tWpAIndex), "tWpBIndex", tWpBIndex, SkuNav:GetWaypointData2(nil, tWpBIndex))
+
 		local tWpAData = SkuNav:GetWaypointData2(nil, tWpAIndex)
 		local tWpBData = SkuNav:GetWaypointData2(nil, tWpBIndex)
 
@@ -809,10 +822,6 @@ function SkuNav:GetCurrentAreaId(aUnitId, pr)
 	local tAreaId
 
 	for i, v in pairs(SkuDB.InternalAreaTable) do
-		if pr and (v.AreaName_lang[Sku.Loc] == tMinimapZoneText) then--and v.ParentAreaID == C_Map.GetBestMapForUnit("player") then
-			print(i, v.AreaName_lang[Sku.Loc], tMinimapZoneText)
-			print("  ", "v.ParentAreaID", v.ParentAreaID, "C_Map.GetBestMapForUnit(\"player\")", C_Map.GetBestMapForUnit("player"))
-		end
 		if (v.AreaName_lang[Sku.Loc] == tMinimapZoneText) and v.ParentAreaID == C_Map.GetBestMapForUnit("player") and (SkuNav:GetUiMapIdFromAreaId(i) == tPlayerUIMap) then
 			tAreaId = i
 			break
@@ -821,21 +830,12 @@ function SkuNav:GetCurrentAreaId(aUnitId, pr)
 
 	if not tAreaId then
 		local tExtMapId = SkuDB.ExternalMapID[SkuNav:GetBestMapForUnit("player")]
-		if pr then
-			print("tExtMapId1", tExtMapId)
-		end
 		if aUnitId then
 			tExtMapId = SkuDB.ExternalMapID[SkuNav:GetBestMapForUnit(aUnitId)]
-		end
-		if pr then
-			print("tExtMapId2", tExtMapId)
 		end
 		if tExtMapId then
 			for i, v in pairs(SkuDB.InternalAreaTable) do
 				if v.AreaName_lang[Sku.Loc] == tExtMapId.Name_lang[Sku.Loc] then
-					if pr then
-						print("     ", i, v.AreaName_lang[Sku.Loc], tExtMapId.Name_lang[Sku.Loc])
-					end
 					tAreaId = i
 					break
 				end
@@ -1584,7 +1584,9 @@ function SkuNav:OnMouseRightUp()
 			if SkuWaypointWidgetCurrent then
 				local wpObj = SkuNav:GetWaypointData2(SkuWaypointWidgetCurrent)
 				if wpObj then
+					ClearWaypointMM(tSkuNavMMDrawCache[WaypointCacheLookupAll[wpObj.name]].poolObjects)
 					SkuNav:DeleteWaypoint(SkuWaypointWidgetCurrent)
+
 					SkuOptions.db.global["SkuNav"].hasCustomMapData = true
 				end
 			end
@@ -2330,6 +2332,8 @@ function SkuNav:PLAYER_ENTERING_WORLD(aEvent, aIsInitialLogin, aIsReloadingUi)
 		end)
 	end
 	SkuNav:UpdateAutoPrefixes(aEvent)
+
+	SkuMapperFocusOnPlayer = true
 end
 
 ---------------------------------------------------------------------------------------------------------------------------------------
@@ -2675,6 +2679,8 @@ function SkuNav:DeleteWaypoint(aWpName, aIsTempWaypoint, aSilent)
 			end
 		end
 		for x = 1, #tLinkNames do
+
+
 			SkuNav:DeleteWpLink(aWpName, tLinkNames[x])
 		end
 
@@ -3232,10 +3238,6 @@ function SkuNav:CleanUpPreCataMapData()
 
 	SkuNav:SaveLinkDataToProfile()
 	
-	print("del_1_wps", del_1_wps)
-	print("del_1_links", del_1_links)
-	print("del_23_links", del_23_links)
-
 	--tExportDataTable.WaypointLevels = SkuOptions.db.global["SkuNav"].WaypointLevels or {}
 
 end

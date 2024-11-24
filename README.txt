@@ -61,7 +61,11 @@ Release notes
 
 r4.4
 	- A lot of Spirit Healer waypoints added
-	- Tried to fix the Molten Front area
+	- Fixed the Molten Front area
+	- Enhanced the overall performance
+	- Map is auto set to Follow on moving to a different continent
+	- Limited the maximum number of drawn waypoints and links with Current Contintent selected to 15k
+	- Resticted the max zoom out factor with Current Contintent to a level that still can be handled by the UI
 
 r4.3
 	- Removed a lot of incorrect maps
@@ -70,7 +74,6 @@ r4.3
 	- Tried to fix Gilneas
 	- Fixed Barrens
 	- Fixed Strangle
-
 
 r4.2
 	- Added a "Unique only" button to the options, to show creatures and objects with a single spawn point only
