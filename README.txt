@@ -59,6 +59,9 @@ Slash commands
 ------------------------------------------------
 Release notes
 
+r4.5
+	- Uldum area fixed
+
 r4.4
 	- A lot of Spirit Healer waypoints added
 	- Fixed the Molten Front area
