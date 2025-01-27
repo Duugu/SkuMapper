@@ -1,11 +1,10 @@
 ## Interface: 40401
-## Title: SkuMapper (4.5)
+## Title: SkuMapper (4.6)
 ## SavedVariables: SkuOptionsDB
 ## Dependencies: 
-## Version: 4.5
+## Version: 4.6
 ## X-Curse-Project-ID: 
 
-Bindings.xml
 embeds.xml
 
 Libs\HereBeDragons\HereBeDragons-2.0.lua
